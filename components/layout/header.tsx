@@ -83,53 +83,56 @@ export function Header() {
 
           <SheetContent
             side="right"
-            className="w-[min(87vw,360px)] bg-ink text-white border-none"
+            className="w-[min(87vw,360px)] bg-ink text-white border-none p-0 flex flex-col h-full"
           >
-            <SheetHeader className="border-b border-white/12 px-6 py-5 text-left">
+            <SheetHeader className="border-b border-white/12 px-6 py-5 text-left shrink-0">
               <SheetTitle className="text-white font-display text-lg">
                 <Image
                   src="/images/logo.png"
                   alt="Home"
                   width={55}
                   height={55}
-                  className="mb-2"
+                  className="mb-2 rounded-full"
                 />
                 <span className="font-mono text-[11px] tracking-widest uppercase text-orange block">
                   {siteConfig.tagline}
                 </span>
               </SheetTitle>
-
             </SheetHeader>
 
-            <ul className="">
-              {mainNav.map((item) => (
-                <li key={item.href} className="border-b border-white/6">
+            {/* Scrollable nav area */}
+            <div className="flex-1 overflow-y-auto">
+              <ul>
+                {mainNav.map((item) => (
+                  <li key={item.href} className="border-b border-white/6">
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "block px-6 py-4 text-base transition-all hover:pl-8",
+                        isActive(item.href)
+                          ? "text-orange font-semibold bg-orange/10"
+                          : "text-white/80 hover:text-white"
+                      )}
+                    >
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+                <li className="border-b border-white/6">
                   <Link
-                    href={item.href}
+                    href="/abubakari-institute"
                     onClick={() => setOpen(false)}
-                    className={cn(
-                      "block px-6 py-4 text-base transition-all hover:pl-8",
-                      isActive(item.href)
-                        ? "text-orange font-semibold bg-orange/10"
-                        : "text-white/80 hover:text-white"
-                    )}
+                    className="block px-6 py-4 text-base text-white/80 hover:text-white hover:pl-8"
                   >
-                    {item.title}
+                    Abubakari Aruna Institute
                   </Link>
                 </li>
-              ))}
-              <li className="border-b border-white/6">
-                <Link
-                  href="/abubakari-institute"
-                  onClick={() => setOpen(false)}
-                  className="block px-6 py-4 text-base text-white/80 hover:text-white hover:pl-8"
-                >
-                  Abubakari Aruna Institute
-                </Link>
-              </li>
-            </ul>
+              </ul>
+            </div>
 
-            <div className="mt-auto px-5 pb-6 flex flex-col gap-3">
+            {/* Fixed bottom section */}
+            <div className="shrink-0 px-5 pb-6 flex flex-col gap-3">
               <Link
                 href="/donate"
                 onClick={() => setOpen(false)}
@@ -141,12 +144,12 @@ export function Header() {
 
               <div className="flex justify-center gap-3 mt-2">
                 {SOCIAL_LINKS.map(s => (
-                <a key={s.label} href="#" aria-label={s.label} className="text-white/50 hover:text-[#f97316] transition-colors">
-                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d={s.icon} />
-                  </svg>
-                </a>
-              ))}
+                  <a key={s.label} href="#" aria-label={s.label} className="text-white/50 hover:text-[#f97316] transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d={s.icon} />
+                    </svg>
+                  </a>
+                ))}
               </div>
 
               <p className="text-center font-mono text-[10.5px] text-white/50 leading-relaxed mt-4 pt-3 border-t border-white/10">
@@ -157,6 +160,7 @@ export function Header() {
               </p>
             </div>
           </SheetContent>
+
         </Sheet>
       </div>
     </nav>

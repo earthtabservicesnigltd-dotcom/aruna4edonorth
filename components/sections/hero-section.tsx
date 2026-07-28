@@ -13,8 +13,7 @@ export function HeroSection() {
           </p>
           <div className="rise mt-9 flex gap-3.5 flex-wrap" style={{ "--d": "220ms" } as React.CSSProperties}>
             <Link href="/volunteer" className="btn-solid">Join the Movement</Link>
-            <Link href="/volunteer" className="btn-ghost">Volunteer Now</Link>
-            <Link href="/manifesto" className="btn-solid">Read Manifesto</Link>
+            <Link href="/manifesto" className="btn-ghost">Read Manifesto</Link>
           </div>
         </div>
 
