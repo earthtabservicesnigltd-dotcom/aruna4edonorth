@@ -46,20 +46,21 @@ export default function AdminDonationsPage() {
     if (!donor || !amount) return;
 
     const supabase = createClient();
-    await supabase.from("donations").insert([{
-      donor,
-      amount: Number(amount),
-      method,
-      date: date || new Date().toISOString().slice(0, 10),
-      status,
+    const { error } = await supabase.from("donations").insert([{
+      donor, amount: Number(amount), method,
+      date: date || new Date().toISOString().slice(0, 10), status,
     }]);
 
-    setDonor("");
-    setAmount("");
-    setDate("");
-    setShowForm(false);
+    if (error) {
+      alert("Error: " + error.message);
+      console.error("Insert error:", error);
+      return;
+    }
+
+    setDonor(""); setAmount(""); setDate(""); setShowForm(false);
     loadDonations();
   }
+
 
   async function toggleStatus(id: string, current: string) {
     const newStatus = current === "Received" ? "Pending" : "Received";

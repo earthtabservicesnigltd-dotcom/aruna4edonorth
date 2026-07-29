@@ -65,7 +65,7 @@
 
   /* Custom Layout & Spacing */
   --max-w-site: 900px;
-  --radius-site: 2px;
+  --radius-site: 8px;
 }
 
 :root {

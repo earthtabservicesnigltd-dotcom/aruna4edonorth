@@ -1,9 +1,10 @@
-// components/sections/contact/contact-form-section.tsx
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@/lib/client";
 import { SectionHead } from "../section-head";
 import { delay } from "@/lib/animation";
+import { Check, ArrowRight, Loader2 } from "lucide-react";
 
 const topics = ["General Enquiry", "Volunteering", "Ward Issue", "Media / Press", "Event Invite"];
 
@@ -11,7 +12,39 @@ const lgas = ["Akoko-Edo", "Etsako Central", "Etsako East", "Etsako West", "Owan
 
 export function ContactFormSection() {
   const [activeTopic, setActiveTopic] = useState("General Enquiry");
+  const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    lga: "",
+    message: "",
+  });
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+
+    try {
+      const supabase = createClient();
+      await supabase.from("messages").insert([{
+        type: "Contact",
+        name: form.name,
+        email: form.email,
+        body: `Topic: ${activeTopic}\nPhone: ${form.phone}\nLGA: ${form.lga}\n\n${form.message}`,
+      }]);
+      setSubmitted(true);
+    } catch (err) {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <section className="py-22">
@@ -19,73 +52,87 @@ export function ContactFormSection() {
         <SectionHead number="SEND A MESSAGE" title={<>Tell Us What&apos;s on <span className="accent">Your Mind</span></>} />
 
         <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-14 items-start">
-          <div className="bg-white border border-ink/12 rounded-site p-10 rise">
-            <h3 className="font-display font-semibold text-2xl mb-1.5">Write to the Campaign</h3>
-            <span className="font-mono text-[11.5px] tracking-wide text-slate block mb-7">WE REPLY WITHIN 48 HOURS</span>
-
-            <div className="mb-4">
-              <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">What is this about?</label>
-              <div className="flex flex-wrap gap-2.5">
-                {topics.map((t) => (
-                  <button key={t} onClick={() => setActiveTopic(t)}
-                    className={`font-mono text-xs px-3.5 py-2 rounded-site border transition-colors ${
-                      activeTopic === t ? "bg-forest text-white border-forest" : "bg-paper text-ink border-ink/15 hover:border-orange hover:text-orange"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              {[
-                { label: "Full Name", placeholder: "e.g. Ehizojie Osayande", type: "text" },
-                { label: "Email Address", placeholder: "you@example.com", type: "email" },
-              ].map((f) => (
-                <div key={f.label}>
-                  <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">{f.label}</label>
-                  <input type={f.type} placeholder={f.placeholder} className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors" />
+          <form onSubmit={handleSubmit} className="bg-white border border-ink/12 rounded-site p-10 rise">
+            {submitted ? (
+              <div className="text-center py-8">
+                <div className="w-14 h-14 rounded-full bg-emerald/10 text-emerald flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-7 h-7" />
                 </div>
-              ))}
-            </div>
+                <h3 className="font-display font-semibold text-xl mb-2">Message Sent</h3>
+                <p className="text-sm text-slate">Thank you, {form.name.split(" ")[0]}. We typically respond within 48 hours.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="font-display font-semibold text-2xl mb-1.5">Write to the Campaign</h3>
+                <span className="font-mono text-[11.5px] tracking-wide text-slate block mb-7">WE REPLY WITHIN 48 HOURS</span>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              {[
-                { label: "Phone Number", placeholder: "+234", type: "tel" },
-                { label: "LGA of Residence", placeholder: "", type: "select", options: ["Select LGA (optional)", ...lgas] },
-              ].map((f) => (
-                <div key={f.label}>
-                  <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">{f.label}</label>
-                  {f.type === "select" ? (
-                    <select className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors bg-white">
-                      {f.options?.map((o) => <option key={o}>{o}</option>)}
+                <div className="mb-4">
+                  <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">What is this about?</label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {topics.map((t) => (
+                      <button key={t} type="button" onClick={() => setActiveTopic(t)}
+                        className={`font-mono text-xs px-3.5 py-2 rounded-site border transition-colors ${
+                          activeTopic === t ? "bg-forest text-white border-forest" : "bg-paper text-ink border-ink/15 hover:border-orange hover:text-orange"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">Full Name</label>
+                    <input type="text" required value={form.name} onChange={e => handleChange("name", e.target.value)}
+                      placeholder="e.g. Ehizojie Osayande"
+                      className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors" />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">Email Address</label>
+                    <input type="email" required value={form.email} onChange={e => handleChange("email", e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">Phone Number</label>
+                    <input type="tel" value={form.phone} onChange={e => handleChange("phone", e.target.value)}
+                      placeholder="+234"
+                      className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors" />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">LGA of Residence</label>
+                    <select value={form.lga} onChange={e => handleChange("lga", e.target.value)}
+                      className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors bg-white">
+                      <option>Select LGA (optional)</option>
+                      {lgas.map((o) => <option key={o}>{o}</option>)}
                     </select>
-                  ) : (
-                    <input type={f.type} placeholder={f.placeholder} className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors" />
-                  )}
+                  </div>
                 </div>
-              ))}
-            </div>
 
-            <div className="mb-4">
-              <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">Your Message</label>
-              <textarea rows={5} placeholder="Share the details. If it's a ward-level issue, mention your ward and town." className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors resize-vertical min-h-[130px]" />
-            </div>
+                <div className="mb-4">
+                  <label className="font-mono text-[11px] tracking-wider uppercase text-slate block mb-2">Your Message</label>
+                  <textarea required value={form.message} onChange={e => handleChange("message", e.target.value)}
+                    rows={5} placeholder="Share the details. If it's a ward-level issue, mention your ward and town."
+                    className="w-full px-4 py-3.5 border border-ink/18 rounded-site text-[14.5px] outline-none focus:border-orange transition-colors resize-vertical min-h-[130px]" />
+                </div>
 
-            <button onClick={() => setSubmitted(true)}
-              className="w-full bg-orange text-white py-4 rounded-site font-semibold text-[15px] hover:bg-orange-dark transition-colors flex items-center justify-center gap-2">
-              {submitted ? "✓ Message Sent" : "Send Message →"}
-            </button>
+                <button type="submit" disabled={sending}
+                  className="w-full bg-orange text-white py-4 rounded-site font-semibold text-[15px] hover:bg-orange-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+                  {sending ? (
+                    <>Sending... <Loader2 className="w-4 h-4 animate-spin" /></>
+                  ) : (
+                    <>Send Message <ArrowRight className="w-4 h-4" /></>
+                  )}
+                </button>
 
-            {submitted && (
-              <div className="flex items-center gap-3 bg-emerald/8 border border-emerald/25 text-emerald rounded-site p-3.5 mt-4 text-sm">
-                ✅ Thank you. Your message is on its way to the campaign team.
-              </div>
+                <p className="text-xs leading-relaxed text-slate mt-4">By sending this message you agree to be contacted by the campaign regarding your enquiry. We never share your details with third parties.</p>
+              </>
             )}
-
-            <p className="text-xs leading-relaxed text-slate mt-4">By sending this message you agree to be contacted by the campaign regarding your enquiry. We never share your details with third parties.</p>
-          </div>
+          </form>
 
           <div className="space-y-6 rise" style={delay(120)}>
             <div className="bg-paper rounded-site p-8">
