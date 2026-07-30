@@ -355,11 +355,6 @@
   .involve-block.filled {
     @apply bg-forest text-white;
   }
-
-  .involve-block.filled p {
-    /* Bracket syntax for custom opacity */
-    @apply text-white/[0.78];
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

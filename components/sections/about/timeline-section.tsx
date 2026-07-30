@@ -56,7 +56,7 @@ function TimelineColumn({ title, items }: { title: string; items: typeof educati
         {items.map((item, i) => (
           <div
             key={item.title}
-            className="grid grid-cols-[90px_1fr] gap-8 py-8 border-b border-ink/10 last:border-0"
+            className="grid grid-cols-[50px_1fr] md:grid-cols-[90px_1fr] gap-4 md:gap-8 py-8 border-b border-ink/10 last:border-0"
           >
             <div className="text-center">
               <span className="w-4 h-4 rounded-full bg-orange inline-block border-2 border-white shadow-[0_0_0_1.5px_#F97316] relative z-10" />

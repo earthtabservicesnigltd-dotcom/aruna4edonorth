@@ -11,7 +11,7 @@ const channels = [
 
 export function ContactHeroSection() {
   return (
-    <section className="py-18 pb-14 bg-white border-b border-ink/8">
+    <section className="py-8 pb-14 bg-white border-b border-ink/8">
       <div className="max-w-site mx-auto px-8 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
         <div className="rise">
           <span className="font-mono text-[11.5px] tracking-widest text-orange block mb-4">GET IN TOUCH</span>

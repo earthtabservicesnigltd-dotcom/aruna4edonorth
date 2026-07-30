@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { Trash2, Repeat } from "lucide-react";
+import { toast } from "sonner";
 
 interface Donation {
   id: string;
@@ -52,7 +53,7 @@ export default function AdminDonationsPage() {
     }]);
 
     if (error) {
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
       console.error("Insert error:", error);
       return;
     }
@@ -61,11 +62,27 @@ export default function AdminDonationsPage() {
     loadDonations();
   }
 
-
-  async function toggleStatus(id: string, current: string) {
-    const newStatus = current === "Received" ? "Pending" : "Received";
+  async function confirmDonation(id: string) {
     const supabase = createClient();
-    await supabase.from("donations").update({ status: newStatus }).eq("id", id);
+    const { error } = await supabase
+      .from("donations")
+      .update({ status: "Received" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Donation confirmed!");
+      loadDonations();
+    }
+  }
+
+  async function revertDonation(id: string) {
+    const supabase = createClient();
+    await supabase
+      .from("donations")
+      .update({ status: "Pending" })
+      .eq("id", id);
     loadDonations();
   }
 
@@ -222,14 +239,23 @@ export default function AdminDonationsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => toggleStatus(d.id, d.status)}
-                          className="p-1.5 text-slate hover:text-orange transition-colors"
-                          title="Toggle status"
-                        >
-                          <Repeat className="w-4 h-4" />
-                        </button>
+                      <div className="flex gap-1 items-center">
+                        {d.status === "Pending" ? (
+                          <button
+                            onClick={() => confirmDonation(d.id)}
+                            className="flex items-center gap-1 bg-emerald text-white text-[11px] font-semibold px-3 py-1.5 rounded-site hover:bg-emerald/90 transition-colors"
+                          >
+                            ✓ Confirm
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => revertDonation(d.id)}
+                            className="p-1.5 text-slate hover:text-orange transition-colors"
+                            title="Revert to pending"
+                          >
+                            <Repeat className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => deleteDonation(d.id)}
                           className="p-1.5 text-slate hover:text-red-600 transition-colors"

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function HeroSection() {
   return (
-    <section className="py-24 pb-18 bg-white">
+    <section className="py-8 pb-12 bg-white">
       <div className="max-w-site mx-auto px-8 grid lg:grid-cols-[1.15fr_0.85fr] gap-16 items-end">
         <div>
           <h1 className="rise font-display font-semibold text-[clamp(42px,5.4vw,74px)] leading-[1.04] text-ink tracking-tight">

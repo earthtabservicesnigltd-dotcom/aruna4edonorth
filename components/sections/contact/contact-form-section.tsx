@@ -5,6 +5,7 @@ import { createClient } from "@/lib/client";
 import { SectionHead } from "../section-head";
 import { delay } from "@/lib/animation";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const topics = ["General Enquiry", "Volunteering", "Ward Issue", "Media / Press", "Event Invite"];
 
@@ -40,7 +41,7 @@ export function ContactFormSection() {
       }]);
       setSubmitted(true);
     } catch (err) {
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setSending(false);
     }

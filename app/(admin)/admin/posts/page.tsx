@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { Trash2, Repeat, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface Post {
   id: string;
@@ -64,7 +65,7 @@ export default function AdminPostsPage() {
     }]);
 
     if (error) {
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
       return;
     }
 

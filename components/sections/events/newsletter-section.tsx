@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/client";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export function NewsletterSection() {
       }]);
       setSubmitted(true);
     } catch {
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setSending(false);
     }

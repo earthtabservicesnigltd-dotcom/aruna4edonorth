@@ -9,8 +9,10 @@ import { TestimonialsSection } from "@/components/sections/testimonials-section"
 import { VoxpopSection } from "@/components/sections/voxpop-section";
 import { CtaBannerSection } from "@/components/sections/cta-banner-section";
 import { InvolveSection } from "@/components/sections/involve-section";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 export default function HomePage() {
+  useScrollReveal();
 
   return (
     <>

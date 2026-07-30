@@ -5,7 +5,7 @@ import { delay } from "@/lib/animation";
 
 export function VisionHeroSection() {
   return (
-    <section className="py-18 pb-14 bg-white border-b border-ink/8">
+    <section className="py-8 pb-14 bg-white border-b border-ink/8">
       <div className="max-w-site mx-auto px-8 grid lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
         <div className="rise">
           <h1 className="font-display font-semibold text-[clamp(36px,4.2vw,58px)] leading-tight text-ink tracking-tight">

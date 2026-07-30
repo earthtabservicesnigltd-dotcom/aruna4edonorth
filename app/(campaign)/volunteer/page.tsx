@@ -7,6 +7,7 @@ import { VolunteerTypesSection } from "@/components/sections/volunteer/volunteer
 import { JoinFormSection } from "@/components/sections/volunteer/join-form-section";
 import { WhosInSection } from "@/components/sections/volunteer/whos-in-section";
 import { VolunteerCtaSection } from "@/components/sections/volunteer/volunteer-cta-section";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function VolunteerPage() {
   useScrollReveal();
@@ -15,7 +16,9 @@ export default function VolunteerPage() {
     <>
       <VolunteerHeroSection />
       <VolunteerTypesSection />
-      <JoinFormSection />
+      <ErrorBoundary>
+        <JoinFormSection />
+      </ErrorBoundary>
       <WhosInSection />
       <VolunteerCtaSection />
     </>
