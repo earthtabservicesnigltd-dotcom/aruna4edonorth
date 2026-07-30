@@ -19,13 +19,13 @@ export function WhosInSection() {
         <div className="flex items-end justify-between flex-wrap gap-5 mb-10">
           <div>
             <span className="font-mono text-[11px] tracking-widest text-orange uppercase block mb-3.5">Live Sign-Up Feed</span>
-            <h2 className="font-display font-semibold text-[clamp(26px,3vw,38px)] leading-tight">
+            <h2 className="font-display font-semibold text-[clamp(26px,3vw,38px)] leading-tight whitespace-nowrap">
               Who&apos;s Already <span className="text-orange italic">Showing Up</span>
             </h2>
           </div>
-          <div className="text-right">
+          <div className="text-center md:text-right">
             <strong className="font-display text-[40px] text-orange block leading-none">1,248</strong>
-            <span className="font-mono text-[11px] tracking-wider uppercase text-black/55">Volunteers Across 7 LGAs</span>
+            <span className="font-mono text-[11px] tracking-wider uppercase text-black/55 text-center">Volunteers Across 7 LGAs</span>
           </div>
         </div>
 

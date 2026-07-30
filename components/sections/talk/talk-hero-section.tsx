@@ -5,7 +5,7 @@ import { delay } from "@/lib/animation";
 
 export function TalkHeroSection() {
   return (
-    <section className="py-18 pb-14 bg-white border-b border-ink/8">
+    <section className="py-8 pb-14 bg-white border-b border-ink/8">
       <div className="max-w-site mx-auto px-8 grid lg:grid-cols-[1.05fr_0.95fr] gap-14 items-center">
         <div className="rise">
           <span className="font-mono text-[11.5px] tracking-widest text-orange block mb-4">A DIRECT LINE</span>

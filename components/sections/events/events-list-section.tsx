@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { delay } from "@/lib/animation";
+import Link from "next/link";
 
 const categories = ["All", "Rallies", "Town Halls", "Community Visits", "Debates", "Door-to-Door"] as const;
 
@@ -18,7 +19,7 @@ interface EventItem {
 }
 
 export function EventsListSection() {
-  const [active, setActive] = useState("All");
+const [active, setActive] = useState("All");
   const [events, setEvents] = useState<EventItem[]>([]);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function EventsListSection() {
             filtered.map((event) => (
               <div
                 key={event.id}
-                className="grid grid-cols-[110px_1fr_auto] gap-8 items-center border border-ink/12 rounded-site p-6 bg-white hover:-translate-y-1 hover:shadow-lg transition-all"
+                className="grid grid-cols-1 md:grid-cols-[110px_1fr_auto] gap-8 items-center border border-ink/12 rounded-site p-6 bg-white hover:-translate-y-1 hover:shadow-lg transition-all"
               >
                 <div className="text-center border-r border-ink/10 pr-6">
                   <span className="font-mono text-[11px] tracking-wider text-orange uppercase block">{month(event.date)}</span>
@@ -104,11 +105,13 @@ export function EventsListSection() {
                     <span>📍 {event.event_location}</span>
                   </div>
                 </div>
+              
+                <Link href="/volunteer"
+                  className="w-full text-center font-body font-semibold text-[13.5px] px-2 py-4 rounded-site border-[1.5px] bg-orange text-white border-transparent hover:bg-ink transition-colors">
+                  🤝 Volunteer 
+                </Link>
 
-                <div className="flex flex-col gap-2 min-w-[150px]">
-                  <a href={event.rsvp_link || "#rsvp"} className="btn-solid text-center text-sm py-2.5 px-5">RSVP</a>
-                  <a href="/volunteer" className="text-center text-xs font-semibold text-forest hover:text-orange transition-colors">🤝 Volunteer</a>
-                </div>
+                
               </div>
             ))
           )}

@@ -165,8 +165,7 @@ export function JoinFormSection() {
             <p className="text-slate mb-8">
               Please confirm your information before generating your ID card.
             </p>
-
-            <div className="bg-white border border-ink/12 rounded-site p-8 space-y-5 mb-8">
+            <div className="bg-white border border-ink/12 rounded-site p-4 sm:p-8 space-y-5 mb-8">
               {photoPreview && (
                 <div className="flex justify-center pb-4 border-b border-ink/10 mb-2">
                   <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-ink">
@@ -183,7 +182,7 @@ export function JoinFormSection() {
               {[
                 { label: "Full Name", value: formData.full_name },
                 { label: "Phone Number", value: formData.phone },
-                { label: "Email Address", value: formData.email },
+                { label: "Email", value: formData.email },
                 { label: "LGA of Residence", value: formData.lga },
                 {
                   label: "Skills",
@@ -197,17 +196,18 @@ export function JoinFormSection() {
               ].map((field) => (
                 <div
                   key={field.label}
-                  className="flex justify-between items-center py-3 border-b border-ink/10 last:border-0"
+                  className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 py-2 border-b border-ink/10 last:border-0"
                 >
-                  <span className="font-mono text-[10.5px] tracking-wider uppercase text-slate">
+                  <span className="font-mono text-[10.5px] tracking-wider uppercase text-slate shrink-0">
                     {field.label}
                   </span>
-                  <span className="text-sm font-medium text-ink text-right max-w-[60%]">
+                  <span className="text-sm font-medium text-ink text-left sm:text-right sm:text-end w-full sm:w-auto break-words">
                     {field.value}
                   </span>
                 </div>
               ))}
             </div>
+
 
             <Button
               onClick={() => setDialogOpen(true)}
@@ -377,7 +377,7 @@ export function JoinFormSection() {
               <span className="font-mono text-[10.5px] tracking-wider uppercase text-slate block mb-3">
                 Your Skills
               </span>
-              <div className="grid grid-cols-2 gap-2.5 mb-7">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-7">
                 {skillOptions.map((s) => {
                   const selected = formData.skills.includes(s.id);
                   return (
@@ -408,7 +408,7 @@ export function JoinFormSection() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-orange text-white py-4 rounded-site font-semibold text-[15.5px] hover:bg-orange-dark transition-colors flex items-center justify-center gap-2.5 disabled:opacity-60"
+                className="w-full bg-orange text-white py-4 rounded-site font-semibold text-[13.5px] md:text-[15.5px] hover:bg-orange-dark transition-colors flex items-center justify-center gap-2.5 disabled:opacity-60"
               >
                 {submitting ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
