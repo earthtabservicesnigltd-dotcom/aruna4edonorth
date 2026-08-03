@@ -34,9 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behaviour="smooth">
+    <html lang="en" data-scroll-behaviour="smooth" suppressHydrationWarning>
       <body
         className={`${fraunces.variable} ${workSans.variable} ${ibmPlexMono.variable} is-loading antialiased`}
+        suppressHydrationWarning
       >
         {children}
         <Toaster /> 

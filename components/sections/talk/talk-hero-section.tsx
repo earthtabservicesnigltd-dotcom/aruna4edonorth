@@ -19,7 +19,7 @@ export function TalkHeroSection() {
             <a href="#ask" className="inline-flex items-center gap-2 bg-orange text-white px-6 py-3.5 rounded-[34px] font-semibold text-[14.5px] hover:scale-110 hover:shadow-lg transition-all">
               ❓ Ask a Question
             </a>
-            <a href="https://wa.me/2348012345678" className="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-3.5 rounded-[34px] font-semibold text-[14.5px] border-2 border-[#25D366] hover:scale-110 hover:shadow-lg transition-all">
+            <a href="https://wa.me/" className="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-3.5 rounded-[34px] font-semibold text-[14.5px] border-2 border-[#25D366] hover:scale-110 hover:shadow-lg transition-all">
               💬 Ask on WhatsApp
             </a>
           </div>

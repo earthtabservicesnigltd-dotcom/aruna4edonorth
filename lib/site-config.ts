@@ -2,8 +2,8 @@ export const siteConfig = {
   name: "Comr. Aruna Abubakari",
   tagline: "Edo North · 2027",
   email: "hello@arunaedonorth.ng",
-  description:
-    "The campaign of Comr. Aruna Abubakari for the Edo North Senatorial District, 2027 General Election.",
+  description: "The campaign of Comr. Aruna Abubakari for the Edo North Senatorial District, 2027 General Election.",
+  whatsappNumber: "", // <-- ADD THIS (Replace later with real number)
 };
 
 export const mainNav = [
