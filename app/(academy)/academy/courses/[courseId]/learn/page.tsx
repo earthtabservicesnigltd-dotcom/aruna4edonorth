@@ -1,19 +1,21 @@
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createServerSupabase } from "@/lib/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle } from "lucide-react";
-import { completeLesson } from "../actions";
+import { completeLesson } from "../action";
 
-export default async function LessonPage({ params }: { params: { courseId: string } }) {
+export default async function LessonPage({ params }: { params: Promise<{ courseId: string }> }) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const {courseId} = await params
 
   if (!user) redirect("/login-signup");
 
   const { data: course } = await supabase
     .from("courses")
     .select("id, title, content")
-    .eq("id", params.courseId)
+    .eq("id", courseId)
     .single();
 
   if (!course) notFound();

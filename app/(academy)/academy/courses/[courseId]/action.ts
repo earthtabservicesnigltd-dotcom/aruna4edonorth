@@ -103,15 +103,24 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (!student) throw new Error("Student profile not found.");
 
-  // 1. Fetch the correct answers securely
+  // 1. Fetch the assessment ID for this course
+  const { data: assessment } = await supabase
+    .from("assessments")
+    .select("id")
+    .eq("course_id", courseId)
+    .single();
+
+  if (!assessment) throw new Error("No assessment found for this course.");
+
+  // 2. Fetch the correct answers securely
   const { data: questions } = await supabase
     .from("questions")
     .select("id, correct_option_index")
-    .eq("course_id", courseId);
+    .eq("assessment_id", assessment.id);
 
-  if (!questions || questions.length === 0) throw new Error("No questions found for this course.");
+  if (!questions || questions.length === 0) throw new Error("No questions found for this assessment.");
 
-  // 2. Grade the test
+  // 3. Grade the test
   let score = 0;
   questions.forEach((q) => {
     const userAnswer = formData.get(q.id);
@@ -123,7 +132,7 @@ export async function submitTest(courseId: string, formData: FormData) {
   const percentage = Math.round((score / questions.length) * 100);
   const passed = percentage >= 75;
 
-  // 3. Update student progress
+  // 4. Update student progress
   const { data: course } = await supabase.from("courses").select("programme_id").eq("id", courseId).single();
   
   const { error } = await supabase
@@ -138,7 +147,7 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // 4. Issue certificate if all courses in school are passed
+  // 5. Issue certificate if all courses in school are passed
   if (passed && course?.programme_id) {
     const { data: schoolCourses } = await supabase
       .from("courses")

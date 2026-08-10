@@ -4,29 +4,42 @@ import { ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { TestForm } from "./TestForm";
 
-export default async function TestPage({ params }: { params: { courseId: string } }) {
+export default async function TestPage({ params }: { params: Promise<{ courseId: string }> }) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
+  const {courseId} = await params;
 
   if (!user) redirect("/login-signup");
 
-  // 1. Fetch Course & Questions
+  // 1. Fetch Course Details
   const { data: course } = await supabase
     .from("courses")
     .select("id, title")
-    .eq("id", params.courseId)
+    .eq("id", courseId)
     .single();
 
   if (!course) notFound();
 
-  // IMPORTANT: We only select the data needed to display the test. 
-  // We DO NOT select the 'correct_option_index' here!
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("id, question_text, options")
-    .eq("course_id", course.id);
+  // 2. Fetch the Assessment ID for this course
+  const { data: assessment } = await supabase
+    .from("assessments")
+    .select("id")
+    .eq("course_id", course.id)
+    .single();
 
-  // 2. Check if student is allowed to take the test
+  // 3. Fetch Questions securely
+  // IMPORTANT: We DO NOT select 'correct_option_index' here!
+  let questions: any[] = [];
+  if (assessment) {
+    const { data: questionsData } = await supabase
+      .from("questions")
+      .select("id, question_text, options")
+      .eq("assessment_id", assessment.id);
+    
+    questions = questionsData || [];
+  }
+
+  // 4. Check if student is allowed to take the test
   const { data: student } = await supabase
     .from("students")
     .select("id")
@@ -40,6 +53,7 @@ export default async function TestPage({ params }: { params: { courseId: string 
     .eq("course_id", course.id)
     .single();
 
+  // Kick them back to the lesson if they haven't marked it complete
   if (!progress || !progress.lesson_completed) {
     redirect(`/academy/courses/${course.id}/learn`);
   }
@@ -53,6 +67,7 @@ export default async function TestPage({ params }: { params: { courseId: string 
       <div className="bg-white border border-ink/10 rounded-site p-8">
         <h1 className="font-display font-semibold text-[20px] text-ink mb-1">{course.title} — Assessment</h1>
         
+        {/* If they already passed, show the success state */}
         {progress.status === 'completed' ? (
           <div className="bg-emerald/10 border border-emerald/20 rounded-site p-6 text-center mt-6">
             <CheckCircle className="w-10 h-10 text-emerald mx-auto mb-3" />
@@ -63,6 +78,7 @@ export default async function TestPage({ params }: { params: { courseId: string 
             </Link>
           </div>
         ) : questions && questions.length > 0 ? (
+          // Otherwise, show the test form
           <TestForm questions={questions} courseId={course.id} />
         ) : (
           <p className="text-slate text-sm mt-4">No assessment questions found for this course.</p>

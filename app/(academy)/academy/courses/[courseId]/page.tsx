@@ -1,32 +1,35 @@
-import { createServerSupabase } from "@/lib/server"; // Using @/lib/server
+import { createServerSupabase } from "@/lib/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, PlayCircle, CheckCircle, FileText } from "lucide-react";
-import { enrollCourse } from "./action"; // Using ./action
+import { enrollCourse } from "./action";
 
-export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
+export default async function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
+  // 1. Await params to get courseId (Next.js 15 requirement)
+  const { courseId } = await params;
+
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login-signup");
 
-  // 1. Fetch Course Details
+  // 2. Fetch Course Details using courseId
   const { data: course } = await supabase
     .from("courses")
     .select("*")
-    .eq("id", params.courseId)
+    .eq("id", courseId)
     .single();
 
   if (!course) notFound();
 
-  // 2. Fetch Student Profile
+  // 3. Fetch Student Profile
   const { data: student } = await supabase
     .from("students")
     .select("id, programme_id")
     .eq("email", user.email)
     .single();
 
-  // 3. Fetch Progress for THIS course
+  // 4. Fetch Progress for THIS course
   const { data: progress } = await supabase
     .from("student_progress")
     .select("*")
@@ -34,7 +37,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
     .eq("course_id", course.id)
     .single();
 
-  // 4. Lock Logic
+  // 5. Lock Logic (Check previous course in the same school)
   let isLocked = false;
   let lockReason = "";
 
@@ -61,7 +64,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
     }
   }
 
-  // 5. Determine UI State
+  // 6. Determine UI State
   const isEnrolled = !!progress; 
   const lessonDone = progress?.lesson_completed;
   const testPassed = progress?.status === 'completed';
@@ -73,6 +76,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
       </Link>
 
       <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
+        {/* Course Header */}
         <div className="bg-ink text-white p-8 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 90% 20%, rgba(1,112,61,0.45), transparent 45%)" }} />
           <div className="relative z-10">
@@ -83,8 +87,9 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
         </div>
 
         <div className="p-8 space-y-6">
-          <p className="text-slate leading-relaxed">{course.description}</p>
+          <p className="text-slate leading-relaxed">{course.description || "Course description coming soon."}</p>
 
+          {/* Lock State UI */}
           {isLocked && !isEnrolled && (
             <div className="bg-amber-50 border border-amber-100 rounded-site p-4 text-center">
               <Lock className="w-6 h-6 text-amber-500 mx-auto mb-2" />
@@ -93,6 +98,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
             </div>
           )}
 
+          {/* Passed State UI */}
           {testPassed && (
             <div className="bg-emerald/10 border border-emerald/20 rounded-site p-4 text-center">
               <CheckCircle className="w-6 h-6 text-emerald mx-auto mb-2" />
@@ -101,6 +107,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
             </div>
           )}
 
+          {/* Action Buttons Logic */}
           {!isLocked && !testPassed && (
             <div className="space-y-3">
               {!isEnrolled ? (
@@ -110,12 +117,12 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
                   </button>
                 </form>
               ) : !lessonDone ? (
-                <Link href={`/academy/courses/${course.id}/learn`} className="w-full bg-orange text-white font-bold py-3 rounded-site hover:bg-orange-dark transition-colors text-sm flex items-center justify-center gap-2">
+                <Link href={`/academy/courses/${courseId}/learn`} className="w-full bg-orange text-white font-bold py-3 rounded-site hover:bg-orange-dark transition-colors text-sm flex items-center justify-center gap-2">
                   <PlayCircle className="w-4 h-4" /> Continue Lesson
                 </Link>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Link href={`/academy/courses/${course.id}/test`} className="w-full bg-ink text-white font-bold py-3 rounded-site hover:bg-forest transition-colors text-sm flex items-center justify-center gap-2">
+                  <Link href={`/academy/courses/${courseId}/test`} className="w-full bg-ink text-white font-bold py-3 rounded-site hover:bg-forest transition-colors text-sm flex items-center justify-center gap-2">
                     <FileText className="w-4 h-4" /> Take Assessment
                   </Link>
                   <p className="text-center text-xs text-slate">Score 75% or higher to unlock the next course.</p>
