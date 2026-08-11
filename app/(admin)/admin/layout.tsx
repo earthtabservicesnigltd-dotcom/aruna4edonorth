@@ -12,14 +12,30 @@ import {
   Newspaper,
   LogOut,
   Menu,
+  GraduationCap,
+  BookOpen,
+  CalendarDays,
+  ClipboardList,
+  Link2
 } from "lucide-react";
 
-const NAV_ITEMS = [
+// Updated Nav Items to include Academy
+const CAMPAIGN_NAV = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Volunteers", href: "/admin/volunteers", icon: Users },
   { label: "Donations", href: "/admin/donations", icon: DollarSign },
   { label: "Messages", href: "/admin/messages", icon: Mail },
   { label: "News & Events", href: "/admin/posts", icon: Newspaper },
+];
+
+const ACADEMY_NAV = [
+  { label: "Academy Home", href: "/admin/academy", icon: GraduationCap },
+  { label: "Students", href: "/admin/academy/students", icon: Users },
+  { label: "Courses", href: "/admin/academy/courses", icon: BookOpen },
+  { label: "Schedules", href: "/admin/academy/schedules", icon: CalendarDays },  
+  { label: "Assignments", href: "/admin/academy/assignments", icon: ClipboardList },
+  { label: "Cohort Links", href: "/admin/academy/links", icon: Link2 }, // New Link
+
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -59,18 +75,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      console.log("Session user email:", session.user.email);
-      console.log("Session user metadata:", session.user.app_metadata, session.user.user_metadata);
-
-
-      // Check admin_users table
-      const { data: admin, error } = await supabase
+      const { data: admin } = await supabase
         .from("admin_users")
         .select("email")
         .eq("email", session.user.email)
         .maybeSingle();
-
-       console.log("Admin check result:", admin, error); 
 
       if (!admin) {
         await supabase.auth.signOut();
@@ -124,6 +133,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!session || !isAdmin) return null;
 
+  const renderNavItems = (items: any[]) => {
+    return items.map((item) => {
+      const Icon = item.icon;
+      const active = pathname === item.href;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setSidebarOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-site text-[13.5px] font-medium transition-all ${
+            active
+              ? "bg-orange text-white"
+              : "text-white/78 hover:bg-white/6 hover:text-white hover:pl-4"
+          }`}
+        >
+          <Icon className="w-[16px] h-[16px]" />
+          {item.label}
+        </Link>
+      );
+    });
+  };
+
   return (
     <div className="min-h-screen flex -mt-[72px]">
       {sidebarOpen && (
@@ -147,28 +178,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="font-mono text-[9.5px] tracking-wide uppercase text-orange">Campaign + Institute</div>
           </div>
         </div>
-        <nav className="flex-1 py-3 px-3 space-y-0.5">
+        
+        <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+          {/* Campaign Section */}
           <p className="font-mono text-[10px] tracking-widest uppercase text-white/40 px-3 py-2">Campaign</p>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-site text-[13.5px] font-medium transition-all ${
-                  active
-                    ? "bg-orange text-white"
-                    : "text-white/78 hover:bg-white/6 hover:text-white hover:pl-4"
-                }`}
-              >
-                <Icon className="w-[16px] h-[16px]" />
-                {item.label}
-              </Link>
-            );
-          })}
+          {renderNavItems(CAMPAIGN_NAV)}
+          
+          {/* Academy Section */}
+          <p className="font-mono text-[10px] tracking-widest uppercase text-white/40 px-3 pt-4 pb-2">Academy</p>
+          {renderNavItems(ACADEMY_NAV)}
         </nav>
+        
         <div className="px-4 py-4 border-t border-white/12">
           <div className="flex items-center gap-3">
             <div className="w-[38px] h-[38px] rounded-full bg-forest flex items-center justify-center font-display text-[14.5px] flex-shrink-0">

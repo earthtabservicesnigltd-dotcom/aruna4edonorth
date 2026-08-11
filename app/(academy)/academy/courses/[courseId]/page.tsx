@@ -86,6 +86,18 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
           </div>
         </div>
 
+        {course.intro_video_url && (
+          <div className="mb-6 aspect-video bg-paper rounded-site overflow-hidden border border-ink/10">
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src={`https://www.youtube.com/embed/${course.intro_video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/)?.[1]}`} 
+              title="Course Introduction" 
+              allowFullScreen
+            ></iframe>
+          </div>
+        )}
+
         <div className="p-8 space-y-6">
           <p className="text-slate leading-relaxed">{course.description || "Course description coming soon."}</p>
 

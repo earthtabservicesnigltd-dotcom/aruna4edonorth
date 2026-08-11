@@ -3,46 +3,121 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/client";
-import { ArrowRight, Video, CheckCircle, FileText, BadgeCheck, GraduationCap } from "lucide-react";
+import { ArrowRight, Video, CheckCircle, FileText, BadgeCheck, GraduationCap, Loader2 } from "lucide-react";
 
 export default function AcademyDashboardPage() {
   const supabase = createClient();
+  const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
+  const [currentCourse, setCurrentCourse] = useState<any>(null);
+  const [progressList, setProgressList] = useState<any[]>([]);
+  const [stats, setStats] = useState([
+    { ico: GraduationCap, value: "0", label: "Active Cohort" },
+    { ico: CheckCircle, value: "0/0", label: "Days Completed" },
+    { ico: FileText, value: "0%", label: "Attendance" },
+    { ico: BadgeCheck, value: "0", label: "Certificates Earned" },
+  ]);
 
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (user) {
+        // 1. Fetch Student Profile
         const { data: stuData } = await supabase
           .from("students")
-          .select("name, programme, cohort")
+          .select("id, name, programme, programme_id, cohort")
           .eq("email", user.email)
           .single();
-        if (stuData) setStudent(stuData);
+
+        if (stuData) {
+          setStudent(stuData);
+
+          // 2. Fetch Courses for the Student's Programme
+          const { data: courses } = await supabase
+            .from("courses")
+            .select("id, title, order")
+            .eq("programme_id", stuData.programme_id)
+            .order("order", { ascending: true });
+
+          // 3. Fetch Student Progress
+          const { data: progData } = await supabase
+            .from("student_progress")
+            .select("course_id, status")
+            .eq("student_id", stuData.id);
+
+          // 4. Fetch Certificates Count
+          const { count: certCount } = await supabase
+            .from("certificates")
+            .select("*", { count: "exact", head: true })
+            .eq("student_id", stuData.id);
+
+          // Calculate Statistics
+          const completedDays = progData?.filter(p => p.status === "completed").length || 0;
+          const totalCourses = courses?.length || 0;
+          const attendance = totalCourses > 0 ? Math.round((completedDays / totalCourses) * 100) : 0;
+
+          setStats([
+            { ico: GraduationCap, value: "1", label: "Active Cohort" },
+            { ico: CheckCircle, value: `${completedDays}/${totalCourses}`, label: "Days Completed" },
+            { ico: FileText, value: `${attendance}%`, label: "Attendance" },
+            { ico: BadgeCheck, value: `${certCount || 0}`, label: "Certificates Earned" },
+          ]);
+
+          // Map Progress for UI
+          const daysOfWeek = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
+          const mappedProgress = courses?.map((course, index) => {
+            const progress = progData?.find(p => p.course_id === course.id);
+            let status = "upcoming"; // locked
+            
+            if (progress?.status === "completed") {
+              status = "done";
+            } else if (progress?.status === "unlocked") {
+              status = "current";
+            } else {
+              // If it's the first course, or the previous one is completed, it's current
+              const prevCourse = index > 0 ? courses[index - 1] : null;
+              const prevProgress = prevCourse ? progData?.find(p => p.course_id === prevCourse.id) : null;
+              if (index === 0 || prevProgress?.status === "completed") {
+                status = "current";
+              }
+            }
+
+            return {
+              id: course.id,
+              day: daysOfWeek[index] || `DAY ${index + 1}`,
+              title: course.title,
+              status
+            };
+          }) || [];
+
+          setProgressList(mappedProgress);
+
+          // Find current course
+          const current = mappedProgress.find(p => p.status === "current") || mappedProgress.find(p => p.status === "upcoming");
+          if (current) {
+            setCurrentCourse(courses?.find(c => c.id === current.id));
+          }
+        }
       }
+      setLoading(false);
     }
     loadData();
   }, [supabase]);
 
-  const stats = [
-    { ico: GraduationCap, value: "1", label: "Active Cohort" },
-    { ico: CheckCircle, value: "4/6", label: "Days Completed" },
-    { ico: FileText, value: "82%", label: "Attendance" },
-    { ico: BadgeCheck, value: "2", label: "Certificates Earned" },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-orange" />
+      </div>
+    );
+  }
 
-  const progress = [
-    { day: "MON", title: "Foundations of Estate Management", status: "done" },
-    { day: "TUE", title: "Property Identification & Market Analysis", status: "done" },
-    { day: "WED", title: "Property Management & Client Relations", status: "done" },
-    { day: "THU", title: "Real Estate Development & Project Planning", status: "done" },
-    { day: "FRI", title: "Capstone Project & Housing Solutions", status: "current" },
-    { day: "SAT", title: "Presentation & Graduation", status: "upcoming" },
-  ];
-
+  // Dynamic Deadlines based on current course
   const deadlines = [
-    { ico: FileText, title: "Final Capstone Document", sub: "Estate Management", when: "Today" },
-    { ico: GraduationCap, title: "Virtual Graduation", sub: "Cohort Wk 28", when: "Sat 4PM" },
+    { ico: FileText, title: `${currentCourse?.title || "Current Course"}`, sub: student?.programme || "Programme", when: "Today" },
+    { ico: GraduationCap, title: "Virtual Graduation", sub: student?.cohort || "Cohort", when: "Sat 4PM" },
   ];
 
   return (
@@ -55,19 +130,24 @@ export default function AcademyDashboardPage() {
         />
         <div className="relative z-10 flex items-center justify-between gap-6 flex-wrap">
           <div>
-            <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">FRIDAY · CAPSTONE PROJECT DAY</span>
+            <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">
+              {student?.cohort?.toUpperCase() || "COHORT"} · {currentCourse ? "CONTINUE LEARNING" : "WELCOME"}
+            </span>
             <h2 className="font-display font-semibold text-[24px] md:text-[32px] leading-tight">
               Welcome back, {student?.name?.split(" ")[0] || "Student"}
             </h2>
             <p className="text-[14.5px] text-white/72 mt-2 max-w-[52ch]">
-              You&apos;re on Day 5 of the {student?.programme || "Estate Management"} cohort. Your capstone submission is due today, finish strong.
+              {currentCourse 
+                ? `You are currently on "${currentCourse.title}". Keep up the momentum and finish strong.`
+                : `Welcome to your ${student?.programme || "Academy"} dashboard. Click below to start your first course.`
+              }
             </p>
           </div>
           <Link 
-            href="/academy/courses" 
+            href={currentCourse ? `/academy/courses/${currentCourse.id}` : "/academy/courses"} 
             className="inline-flex items-center gap-2 bg-orange px-5 py-3 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0"
           >
-            Resume Course <ArrowRight className="w-4 h-4" />
+            {currentCourse ? "Resume Course" : "Start Course"} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -95,24 +175,28 @@ export default function AcademyDashboardPage() {
           {/* Today's Class */}
           <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
             <div className="p-5 border-b border-ink/10 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-[18px]">Today&apos;s Live Class</h3>
-              <span className="font-mono text-[10.5px] uppercase tracking-wide bg-orange/12 text-orange-dark px-2.5 py-1 rounded-site">Live 10:00 AM</span>
+              <h3 className="font-display font-semibold text-[18px]">Today&apos;s Focus</h3>
+              <span className="font-mono text-[10.5px] uppercase tracking-wide bg-orange/12 text-orange-dark px-2.5 py-1 rounded-site">Active</span>
             </div>
             <div className="p-5 flex items-center gap-4 flex-wrap">
               <div className="w-14 h-14 rounded-site bg-forest text-white flex flex-col items-center justify-center shrink-0">
-                <strong className="font-display text-xl leading-none">FRI</strong>
-                <span className="font-mono text-[9px] mt-1">DAY 5</span>
+                <strong className="font-display text-xl leading-none">★</strong>
+                <span className="font-mono text-[9px] mt-1">TASK</span>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <h4 className="font-display font-semibold text-[16.5px] mb-1">Estate Development Strategy &amp; Community Housing Solutions</h4>
-                <p className="text-[13px] text-slate">Capstone project development and final submission · Estate Management</p>
+                <h4 className="font-display font-semibold text-[16.5px] mb-1">
+                  {currentCourse?.title || "No active course"}
+                </h4>
+                <p className="text-[13px] text-slate">{student?.programme || "Programme"} · Lesson & Assessment</p>
               </div>
-              <Link 
-                href="/academy/live" 
-                className="inline-flex items-center gap-2 bg-orange px-5 py-2.5 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0"
-              >
-                Join <Video className="w-4 h-4" />
-              </Link>
+              {currentCourse && (
+                <Link 
+                  href={`/academy/courses/${currentCourse.id}/learn`} 
+                  className="inline-flex items-center gap-2 bg-orange px-5 py-2.5 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0"
+                >
+                  Continue <Video className="w-4 h-4" />
+                </Link>
+              )}
             </div>
           </div>
 
@@ -125,8 +209,11 @@ export default function AcademyDashboardPage() {
               </Link>
             </div>
             <div className="p-5">
-              {progress.map((p) => (
-                <div key={p.day} className="flex items-center gap-3.5 py-3 border-b border-ink/10 last:border-0">
+              {progressList.length === 0 && (
+                <p className="text-slate text-sm text-center py-4">No courses found for your programme.</p>
+              )}
+              {progressList.map((p) => (
+                <div key={p.id} className="flex items-center gap-3.5 py-3 border-b border-ink/10 last:border-0">
                   {/* Checkmark Circle */}
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[13px] border-[1.5px] shrink-0 ${
                     p.status === 'done' ? 'bg-emerald text-white border-emerald' :
@@ -136,7 +223,7 @@ export default function AcademyDashboardPage() {
                   </span>
                   
                   <span className="font-mono text-[11px] text-slate w-10 shrink-0">{p.day}</span>
-                  <span className="text-[14px] font-medium flex-1">{p.title}</span>
+                  <span className="text-[14px] font-medium flex-1 truncate">{p.title}</span>
                   
                   {p.status === 'done' && <span className="font-mono text-[10.5px] uppercase bg-emerald/10 text-emerald px-2 py-0.5 rounded-site">Done</span>}
                   {p.status === 'current' && <span className="font-mono text-[10.5px] uppercase bg-orange/12 text-orange-dark px-2 py-0.5 rounded-site">Today</span>}
@@ -154,13 +241,13 @@ export default function AcademyDashboardPage() {
               <h3 className="font-display font-semibold text-[18px]">Upcoming Deadlines</h3>
             </div>
             <div className="p-5">
-              {deadlines.map((d) => {
+              {deadlines.map((d, i) => {
                 const Icon = d.ico;
                 return (
-                  <div key={d.title} className="flex items-center gap-3 py-3 border-b border-ink/10 last:border-0">
+                  <div key={i} className="flex items-center gap-3 py-3 border-b border-ink/10 last:border-0">
                     <Icon className="w-4 h-4 text-orange shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <strong className="block text-[14px]">{d.title}</strong>
+                      <strong className="block text-[14px] truncate">{d.title}</strong>
                       <span className="block text-[12px] text-slate">{d.sub}</span>
                     </div>
                     <span className="font-mono text-[11px] text-slate ml-auto">{d.when}</span>
@@ -171,32 +258,46 @@ export default function AcademyDashboardPage() {
           </div>
 
           {/* Continue Learning */}
-          <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
-            <div className="p-5 border-b border-ink/10 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-[18px]">Continue Learning</h3>
-              <Link href="/academy/courses" className="font-mono text-[11.5px] text-forest hover:text-orange transition-colors">
-                All courses
-              </Link>
+          {currentCourse && (
+            <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
+              <div className="p-5 border-b border-ink/10 flex items-center justify-between">
+                <h3 className="font-display font-semibold text-[18px]">Continue Learning</h3>
+                <Link href="/academy/courses" className="font-mono text-[11.5px] text-forest hover:text-orange transition-colors">
+                  All courses
+                </Link>
+              </div>
+              <div className="p-5">
+                <Link href={`/academy/courses/${currentCourse.id}`} className="block group">
+                  <div className="w-12 h-12 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
+                    <GraduationCap className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-display font-semibold text-[19px] mb-3 truncate">{student?.programme || "Programme"}</h4>
+                  
+                  {/* Calculate Progress */}
+                  {(() => {
+                    const completed = Number(stats[1].value.split('/')[0]);
+                    const total = Number(stats[1].value.split('/')[1]);
+                    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                    return (
+                      <>
+                        <div className="h-1.5 bg-paper rounded-full overflow-hidden mb-2">
+                          <div className="h-full bg-orange rounded-full" style={{ width: `${percentage}%` }}></div>
+                        </div>
+                        <div className="flex justify-between font-mono text-[10.5px] text-slate mb-4">
+                          <span>Course {completed} of {total}</span>
+                          <span>{percentage}%</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                  
+                  <span className="inline-flex items-center gap-2 font-mono text-[11.5px] text-ink border-b border-orange pb-0.5 group-hover:text-orange group-hover:gap-3 transition-all">
+                    Open course <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              </div>
             </div>
-            <div className="p-5">
-              <Link href="/academy/courses" className="block group">
-                <div className="w-12 h-12 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
-                  <GraduationCap className="w-6 h-6" />
-                </div>
-                <h4 className="font-display font-semibold text-[19px] mb-3">Estate Management</h4>
-                <div className="h-1.5 bg-paper rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-orange rounded-full" style={{ width: "80%" }}></div>
-                </div>
-                <div className="flex justify-between font-mono text-[10.5px] text-slate mb-4">
-                  <span>Day 5 of 6</span>
-                  <span>80%</span>
-                </div>
-                <span className="inline-flex items-center gap-2 font-mono text-[11.5px] text-ink border-b border-orange pb-0.5 group-hover:text-orange group-hover:gap-3 transition-all">
-                  Open course <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </Link>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

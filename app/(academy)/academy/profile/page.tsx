@@ -3,22 +3,44 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
   const supabase = createClient();
   const [student, setStudent] = useState<any>(null);
+  const [programmeName, setProgrammeName] = useState("Loading...");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
+        // 1. Fetch Student Profile
+        const { data: stuData, error } = await supabase
           .from("students")
           .select("*")
           .eq("email", user.email)
           .single();
-        if (data) setStudent(data);
+          
+        if (error || !stuData) {
+          setLoading(false);
+          return;
+        }
+        
+        setStudent(stuData);
+
+        // 2. Fetch the Programme Name separately using programme_id
+        if (stuData.programme_id) {
+          const { data: progData } = await supabase
+            .from("programmes")
+            .select("name")
+            .eq("id", stuData.programme_id)
+            .single();
+            
+          if (progData) setProgrammeName(progData.name);
+        } else {
+          setProgrammeName("Not Assigned");
+        }
       }
       setLoading(false);
     }
@@ -28,13 +50,13 @@ export default function ProfilePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     try {
+      // Only update editable fields to prevent breaking programme_id
       const { error } = await supabase
         .from("students")
         .update({
           name: student.name,
           phone: student.phone,
           lga: student.lga,
-          programme: student.programme
         })
         .eq("email", student.email);
 
@@ -45,93 +67,83 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) return <div className="py-20 text-center text-slate">Loading profile...</div>;
+  if (loading) return <div className="py-20 text-center flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-orange" /></div>;
   if (!student) return <div className="py-20 text-center text-slate">No profile found.</div>;
 
-  const initials = student.name ? student.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "ST";
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-3xl mx-auto">
       <div>
         <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">ACCOUNT</span>
-        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">My Profile</h1>
+        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">Edit Your Profile</h1>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_1.6fr] gap-6 items-start">
-        {/* Profile Card */}
-        <div className="bg-white border border-ink/10 rounded-site p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-forest text-white flex items-center justify-center font-display text-3xl mx-auto mb-4">
-            {initials}
+      {/* Edit Form */}
+      <form onSubmit={handleSave} className="bg-white border border-ink/10 rounded-site p-6 md:p-8 space-y-5 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Full Name</label>
+            <input 
+              value={student.name || ""} 
+              onChange={(e) => setStudent({ ...student, name: e.target.value })}
+              className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors" 
+            />
           </div>
-          <h3 className="font-display font-semibold text-xl">{student.name}</h3>
-          <div className="font-mono text-[11px] text-slate tracking-wide mt-1 uppercase">
-            {student.cohort} · {student.programme?.split(" ")[0]}
+          <div>
+            <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Email Address</label>
+            <input 
+              value={student.email || ""} 
+              disabled 
+              className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none bg-paper text-slate cursor-not-allowed" 
+            />
           </div>
-          <button className="mt-6 w-full py-3 border border-ink/10 rounded-site text-[14px] font-semibold text-ink hover:border-orange hover:text-orange transition-colors">
-            Change Photo
-          </button>
         </div>
 
-        {/* Edit Form */}
-        <form onSubmit={handleSave} className="bg-white border border-ink/10 rounded-site p-8 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Full Name</label>
-              <input 
-                value={student.name || ""} 
-                onChange={(e) => setStudent({ ...student, name: e.target.value })}
-                className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors" 
-              />
-            </div>
-            <div>
-              <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Email Address</label>
-              <input 
-                value={student.email || ""} 
-                disabled 
-                className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none bg-paper text-slate" 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Phone Number</label>
-              <input 
-                value={student.phone || ""} 
-                onChange={(e) => setStudent({ ...student, phone: e.target.value })}
-                className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors" 
-              />
-            </div>
-            <div>
-              <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">LGA of Residence</label>
-              <select 
-                value={student.lga || ""} 
-                onChange={(e) => setStudent({ ...student, lga: e.target.value })}
-                className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors bg-white"
-              >
-                <option>Etsako West</option><option>Akoko-Edo</option><option>Etsako Central</option>
-                <option>Etsako East</option><option>Owan East</option><option>Owan West</option>
-              </select>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Current Programme</label>
+            <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Phone Number</label>
+            <input 
+              value={student.phone || ""} 
+              onChange={(e) => setStudent({ ...student, phone: e.target.value })}
+              className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors" 
+            />
+          </div>
+          <div>
+            <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">LGA of Residence</label>
             <select 
-              value={student.programme || ""} 
-              onChange={(e) => setStudent({ ...student, programme: e.target.value })}
+              value={student.lga || ""} 
+              onChange={(e) => setStudent({ ...student, lga: e.target.value })}
               className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none focus:border-orange transition-colors bg-white"
             >
-              <option>Estate Management</option><option>Agro-Allied</option><option>Entrepreneurship & Wealth Creation</option>
-              <option>Digital Skills</option><option>Import & Export</option><option>Engineering Technology</option>
+              <option value="">Select LGA</option>
+              <option>Etsako West</option>
+              <option>Akoko-Edo</option>
+              <option>Etsako Central</option>
+              <option>Etsako East</option>
+              <option>Owan East</option>
+              <option>Owan West</option>
+              <option>Outside Edo North</option>
             </select>
           </div>
+        </div>
 
+        <div>
+          <label className="font-mono text-[10.5px] uppercase tracking-wide text-slate block mb-2">Current Programme</label>
+          <select 
+            value={programmeName}
+            disabled
+            className="w-full px-4 py-3 border border-ink/10 rounded-site text-[14px] outline-none bg-paper text-slate cursor-not-allowed"
+          >
+            <option>{programmeName}</option>
+          </select>
+          <p className="text-[11px] text-slate mt-1.5">Your programme is locked based on your enrollment. Contact admin if changes are needed.</p>
+        </div>
+
+        <div className="flex justify-end">
           <button type="submit" className="bg-orange text-white px-6 py-3 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors">
             Save Changes
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
