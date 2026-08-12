@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabase } from "@/lib/server"; // Using @/lib/server
+import { createServerSupabase } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -19,7 +19,6 @@ export async function enrollCourse(courseId: string, formData: FormData) {
 
   if (!student) throw new Error("Student profile not found.");
 
-  // Check if previous course in the school is completed
   const { data: course } = await supabase
     .from("courses")
     .select("order, programme_id")
@@ -48,13 +47,13 @@ export async function enrollCourse(courseId: string, formData: FormData) {
     }
   }
 
-  // Unlock the course for the student
   const { error } = await supabase
     .from("student_progress")
     .upsert({
       student_id: student.id,
       course_id: courseId,
       status: 'unlocked',
+      lesson_completed: false,
     }, { onConflict: "student_id,course_id" });
 
   if (error) throw new Error(error.message);
@@ -103,7 +102,6 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (!student) throw new Error("Student profile not found.");
 
-  // 1. Fetch the assessment ID for this course
   const { data: assessment } = await supabase
     .from("assessments")
     .select("id")
@@ -112,7 +110,6 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (!assessment) throw new Error("No assessment found for this course.");
 
-  // 2. Fetch the correct answers securely
   const { data: questions } = await supabase
     .from("questions")
     .select("id, correct_option_index")
@@ -120,7 +117,6 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (!questions || questions.length === 0) throw new Error("No questions found for this assessment.");
 
-  // 3. Grade the test
   let score = 0;
   questions.forEach((q) => {
     const userAnswer = formData.get(q.id);
@@ -132,8 +128,7 @@ export async function submitTest(courseId: string, formData: FormData) {
   const percentage = Math.round((score / questions.length) * 100);
   const passed = percentage >= 75;
 
-  // 4. Update student progress
-  const { data: course } = await supabase.from("courses").select("programme_id").eq("id", courseId).single();
+  const { data: course } = await supabase.from("courses").select("programme_id, order").eq("id", courseId).single();
   
   const { error } = await supabase
     .from("student_progress")
@@ -147,8 +142,27 @@ export async function submitTest(courseId: string, formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // 5. Issue certificate if all courses in school are passed
+  // --- FIX: AUTOMATICALLY UNLOCK THE NEXT COURSE ---
   if (passed && course?.programme_id) {
+    const { data: nextCourse } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("programme_id", course.programme_id)
+      .eq("order", course.order + 1)
+      .single();
+
+    if (nextCourse) {
+      await supabase
+        .from("student_progress")
+        .upsert({
+          student_id: student.id,
+          course_id: nextCourse.id,
+          status: 'unlocked',
+          lesson_completed: false,
+        }, { onConflict: "student_id,course_id" });
+    }
+
+    // Check for certificate issuance
     const { data: schoolCourses } = await supabase
       .from("courses")
       .select("id")

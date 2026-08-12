@@ -7,14 +7,14 @@ import { TestForm } from "./TestForm";
 export default async function TestPage({ params }: { params: Promise<{ courseId: string }> }) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
-  const {courseId} = await params;
+  const { courseId } = await params;
 
   if (!user) redirect("/login-signup");
 
   // 1. Fetch Course Details
   const { data: course } = await supabase
     .from("courses")
-    .select("id, title")
+    .select("id, title, programme_id, order")
     .eq("id", courseId)
     .single();
 
@@ -28,7 +28,6 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
     .single();
 
   // 3. Fetch Questions securely
-  // IMPORTANT: We DO NOT select 'correct_option_index' here!
   let questions: any[] = [];
   if (assessment) {
     const { data: questionsData } = await supabase
@@ -58,6 +57,18 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
     redirect(`/academy/courses/${course.id}/learn`);
   }
 
+  // --- FIX: Fetch the actual next course ID if they passed ---
+  let nextCourseId = null;
+  if (progress?.status === 'completed' && course.programme_id) {
+    const { data: nextData } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("programme_id", course.programme_id)
+      .eq("order", course.order + 1)
+      .single();
+    if (nextData) nextCourseId = nextData.id;
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <Link href={`/academy/courses/${course.id}/learn`} className="inline-flex items-center gap-2 font-mono text-[11px] tracking-wider uppercase text-slate hover:text-orange transition-colors">
@@ -73,8 +84,9 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
             <CheckCircle className="w-10 h-10 text-emerald mx-auto mb-3" />
             <h2 className="font-display font-semibold text-lg text-ink">You already passed!</h2>
             <p className="text-slate text-sm mt-1">Your score: {progress.score}%</p>
-            <Link href="/academy/courses" className="mt-4 inline-block bg-orange text-white font-semibold px-5 py-2 rounded-site text-sm hover:bg-orange-dark transition-colors">
-              Go to Next Course
+            {/* --- FIX: Link directly to the next course --- */}
+            <Link href={nextCourseId ? `/academy/courses/${nextCourseId}` : "/academy/courses"} className="mt-4 inline-block bg-orange text-white font-semibold px-5 py-2 rounded-site text-sm hover:bg-orange-dark transition-colors">
+              {nextCourseId ? "Continue to Next Course" : "View Programme"}
             </Link>
           </div>
         ) : questions && questions.length > 0 ? (

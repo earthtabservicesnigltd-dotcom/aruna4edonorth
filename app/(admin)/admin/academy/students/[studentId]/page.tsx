@@ -17,6 +17,9 @@ export default function AdminStudentDetailPage() {
   const [student, setStudent] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
+  
+  // State for updating cohort
+  const [newCohort, setNewCohort] = useState("");
 
   useEffect(() => {
     if (!studentId) return;
@@ -26,7 +29,6 @@ export default function AdminStudentDetailPage() {
   async function fetchStudentData() {
     setLoading(true);
 
-    // 1. Fetch Student Profile
     const { data: stuData, error: stuErr } = await supabase
       .from("students")
       .select("*")
@@ -39,7 +41,6 @@ export default function AdminStudentDetailPage() {
       return;
     }
 
-    // 2. Fetch Programme Name separately
     let programmeName = "Unknown Programme";
     if (stuData.programme_id) {
       const { data: progData } = await supabase
@@ -51,23 +52,20 @@ export default function AdminStudentDetailPage() {
       if (progData) programmeName = progData.name;
     }
 
-    // Attach programme name to student object
-    setStudent({ ...stuData, programme_name: programmeName });
+    setStudent(stuData);
+    setNewCohort(stuData.cohort || "Week 28"); // Initialize cohort input
 
-    // 3. Fetch all courses for this student's programme
     const { data: courses } = await supabase
       .from("courses")
       .select("id, title, order")
       .eq("programme_id", stuData.programme_id)
       .order("order", { ascending: true });
 
-    // 4. Fetch student progress
     const { data: progData } = await supabase
       .from("student_progress")
       .select("course_id, status, score, completed_at")
       .eq("student_id", studentId);
 
-    // Merge courses with progress
     const mappedProgress = courses?.map(course => {
       const p = progData?.find(p => p.course_id === course.id);
       return {
@@ -79,19 +77,28 @@ export default function AdminStudentDetailPage() {
     }) || [];
     setProgress(mappedProgress);
 
-    // 5. Fetch certificates
     const { data: certs } = await supabase
       .from("certificates")
       .select("*")
       .eq("student_id", studentId);
 
-    // Manually map programme names to certificates
     const mappedCerts = (certs || []).map(cert => {
       return { ...cert, programme_name: programmeName };
     });
     setCertificates(mappedCerts);
 
     setLoading(false);
+  }
+
+  async function handleUpdateCohort() {
+    const { error } = await supabase
+      .from("students")
+      .update({ cohort: newCohort })
+      .eq("id", studentId);
+      
+    if (error) return toast.error("Failed to update cohort.");
+    toast.success("Cohort updated successfully!");
+    fetchStudentData(); // Refetch to show updated data
   }
 
   if (loading || !student) {
@@ -109,7 +116,7 @@ export default function AdminStudentDetailPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left Column: Personal Info */}
+        {/* Left Column: Personal Info & Cohort Manager */}
         <div className="space-y-6">
           <div className="bg-white border border-ink/10 rounded-site p-6">
             <h3 className="font-display font-semibold text-[16px] text-ink mb-4 border-b border-ink/10 pb-3">Personal Info</h3>
@@ -135,14 +142,39 @@ export default function AdminStudentDetailPage() {
                   <div className="text-[13.5px] text-ink">{student.lga || "N/A"}</div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Users className="w-4 h-4 text-slate mt-0.5" />
-                <div>
-                  <div className="font-mono text-[10px] uppercase text-slate">Cohort</div>
-                  <div className="text-[13.5px] text-ink">{student.cohort || "N/A"}</div>
-                </div>
+            </div>
+          </div>
+
+          {/* Cohort Update Card */}
+          <div className="bg-white border border-ink/10 rounded-site p-6">
+            <h3 className="font-display font-semibold text-[16px] text-ink mb-4 border-b border-ink/10 pb-3">Cohort Manager</h3>
+            <div className="flex items-start gap-3 mb-4">
+              <Users className="w-4 h-4 text-slate mt-0.5" />
+              <div className="flex-1">
+                <div className="font-mono text-[10px] uppercase text-slate">Current Cohort</div>
+                <div className="text-[13.5px] text-ink font-semibold">{student.cohort || "N/A"}</div>
               </div>
             </div>
+
+            <label className="font-mono text-[10.5px] uppercase text-slate block mb-1.5">Change Cohort</label>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={newCohort} 
+                onChange={(e) => setNewCohort(e.target.value)}
+                placeholder="e.g. Week 29"
+                className="flex-1 px-3 py-2 border border-ink/10 rounded-site text-[13.5px] bg-white outline-none focus:border-orange"
+              />
+              <button 
+                onClick={handleUpdateCohort}
+                className="bg-orange text-white px-4 py-2 rounded-site text-[12.5px] font-semibold hover:bg-orange-dark transition-colors"
+              >
+                Update
+              </button>
+            </div>
+            <p className="text-[10.5px] text-slate mt-2 leading-relaxed">
+              Changing the cohort will instantly update the schedules and assignments this student sees on their dashboard.
+            </p>
           </div>
 
           {/* Certificates Card */}
@@ -169,7 +201,7 @@ export default function AdminStudentDetailPage() {
         {/* Right Column: Course Progress */}
         <div className="lg:col-span-2 bg-white border border-ink/10 rounded-site p-6">
           <h3 className="font-display font-semibold text-[16px] text-ink mb-4 border-b border-ink/10 pb-3">
-            Course Progress: <span className="text-orange">{student.programme_name}</span>
+            Course Progress
           </h3>
 
           <div className="space-y-4">

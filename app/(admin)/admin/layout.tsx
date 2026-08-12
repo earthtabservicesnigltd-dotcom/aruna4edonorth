@@ -16,10 +16,10 @@ import {
   BookOpen,
   CalendarDays,
   ClipboardList,
-  Link2
+  Link2,
+  Bell // <-- Added Bell Icon
 } from "lucide-react";
 
-// Updated Nav Items to include Academy
 const CAMPAIGN_NAV = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Volunteers", href: "/admin/volunteers", icon: Users },
@@ -34,8 +34,8 @@ const ACADEMY_NAV = [
   { label: "Courses", href: "/admin/academy/courses", icon: BookOpen },
   { label: "Schedules", href: "/admin/academy/schedules", icon: CalendarDays },  
   { label: "Assignments", href: "/admin/academy/assignments", icon: ClipboardList },
-  { label: "Cohort Links", href: "/admin/academy/links", icon: Link2 }, // New Link
-
+  { label: "Cohort Links", href: "/admin/academy/links", icon: Link2 },
+  { label: "Notifications", href: "/admin/academy/notifications", icon: Bell }, // <-- Added Link
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -49,7 +49,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isLoginPage = pathname === "/admin/login";
 
-  // Clock tick
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleString("en-GB", {
       weekday: "short", hour: "2-digit", minute: "2-digit",
@@ -60,7 +59,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => clearInterval(id);
   }, []);
 
-  // Auth check
   useEffect(() => {
     if (isLoginPage) {
       setLoading(false);
@@ -180,11 +178,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         
         <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
-          {/* Campaign Section */}
           <p className="font-mono text-[10px] tracking-widest uppercase text-white/40 px-3 py-2">Campaign</p>
           {renderNavItems(CAMPAIGN_NAV)}
           
-          {/* Academy Section */}
           <p className="font-mono text-[10px] tracking-widest uppercase text-white/40 px-3 pt-4 pb-2">Academy</p>
           {renderNavItems(ACADEMY_NAV)}
         </nav>

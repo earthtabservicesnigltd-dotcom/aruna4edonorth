@@ -10,9 +10,9 @@ import { createClient } from "@/lib/client";
 
 const navItems = [
   { href: "/academy", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/academy/courses", icon: BookOpen, label: "My Courses", badge: "6" },
+  { href: "/academy/courses", icon: BookOpen, label: "My Courses" },
   { href: "/academy/schedule", icon: Calendar, label: "Schedule" },
-  { href: "/academy/assignments", icon: FileText, label: "Assignments", badge: "3" },
+  { href: "/academy/assignments", icon: FileText, label: "Assignments" },
   { href: "/academy/live", icon: Video, label: "Live Classes" },
   { href: "/academy/certificates", icon: BadgeCheck, label: "Certificates" },
   { href: "/academy/discussions", icon: MessageCircle, label: "Discussions" },
@@ -29,22 +29,63 @@ export function DashboardSidebar({ open, onClose }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
+  const [badges, setBadges] = useState<Record<string, number>>({}); // State for dynamic badges
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadProfileAndBadges() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from("students")
-          .select("name, cohort")
-          .eq("email", user.email)
-          .single();
-        if (data) setStudent(data);
+      if (!user) return;
+
+      // 1. Get Student Profile
+      const { data: stu } = await supabase
+        .from("students")
+        .select("id, name, cohort, programme_id")
+        .eq("email", user.email)
+        .single();
+        
+      if (stu) setStudent(stu);
+
+      // 2. Calculate Badges
+      if (stu && stu.programme_id) {
+        // A. Courses Badge (Count of 'unlocked' courses)
+        const { count: activeCourses } = await supabase
+          .from("student_progress")
+          .select("*", { count: "exact", head: true })
+          .eq("student_id", stu.id)
+          .eq("status", "unlocked");
+          
+        // B. Certificates Badge (Count of issued certificates)
+        const { count: certCount } = await supabase
+          .from("certificates")
+          .select("*", { count: "exact", head: true })
+          .eq("student_id", stu.id)
+          .eq("status", "Issued");
+
+        // C. Assignments Badge (Total assignments for cohort - submitted assignments)
+        const { data: allAssignments } = await supabase
+          .from("assignments")
+          .select("id")
+          .eq("programme_id", stu.programme_id)
+          .eq("cohort", stu.cohort);
+          
+        const { data: submissions } = await supabase
+          .from("assignment_submissions")
+          .select("assignment_id")
+          .eq("student_id", stu.id);
+          
+        const submittedIds = new Set(submissions?.map(s => s.assignment_id) || []);
+        const pendingAssignments = (allAssignments || []).filter(a => !submittedIds.has(a.id)).length;
+
+        setBadges({
+          "/academy/courses": activeCourses || 0,
+          "/academy/assignments": pendingAssignments || 0,
+          "/academy/certificates": certCount || 0,
+        });
       }
     }
-    loadProfile();
-  }, []);
+    loadProfileAndBadges();
+  }, [pathname]); // Refetch when path changes to update badges if they complete something
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -73,8 +114,8 @@ export function DashboardSidebar({ open, onClose }: Props) {
         <span className="font-mono text-[10px] tracking-widest uppercase text-white/40 block px-3 pb-2 pt-4">Menu</span>
         {navItems.map((item) => {
           const Icon = item.icon;
-          // Check if we are on the exact route (or a child route of it)
           const active = pathname === item.href || (item.href !== "/academy" && pathname.startsWith(item.href));
+          const badgeCount = badges[item.href];
           
           return (
             <Link
@@ -88,11 +129,15 @@ export function DashboardSidebar({ open, onClose }: Props) {
             >
               <Icon className="w-[18px] h-[18px] shrink-0" />
               <span className="flex-1">{item.label}</span>
-              {item.badge && (
-                <span className="font-mono text-[10px] bg-orange/16 text-orange px-1.5 py-0.5 rounded-full">
-                  {item.badge}
+              
+              {/* Dynamic Smart Badges */}
+              {badgeCount && badgeCount > 0 ? (
+                <span className="font-mono text-[10px] bg-orange/20 text-orange px-1.5 py-0.5 rounded-full border border-orange/30">
+                  {badgeCount}
                 </span>
-              )}
+              ) : item.label === "Assignments" && badgeCount === 0 ? (
+                 <span className="w-2 h-2 rounded-full bg-emerald-400/50" title="All caught up"></span>
+              ) : null}
             </Link>
           );
         })}
