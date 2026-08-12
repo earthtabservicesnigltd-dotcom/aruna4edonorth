@@ -27,7 +27,7 @@ export default function AcademyLayout({ children }: { children: React.ReactNode 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-paper">
+      <div className="min-h-screen flex items-center justify-center bg-paper -mt-[72px]">
         <Loader2 className="w-8 h-8 animate-spin text-orange" />
       </div>
     );

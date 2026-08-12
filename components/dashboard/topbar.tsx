@@ -26,6 +26,7 @@ export function DashboardTopbar({ onToggleSidebar }: Props) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<any[]>([]);
+  const [readIds, setReadIds] = useState<string[]>([]);
   const notifRef = useRef<HTMLDivElement>(null);
 
   const title = titles[pathname] || "Dashboard";
@@ -61,6 +62,26 @@ export function DashboardTopbar({ onToggleSidebar }: Props) {
     fetchNotifs();
   }, []);
 
+  // Load read notification IDs from local storage on mount
+  useEffect(() => {
+    const storedReadIds = localStorage.getItem("readNotifIds");
+    if (storedReadIds) {
+      setReadIds(JSON.parse(storedReadIds));
+    }
+  }, []);
+
+  // Calculate unread notifications
+  const unreadNotifs = notifs.filter(n => !readIds.includes(n.id));
+
+  function handleMarkAllRead() {
+    // Add all current notification IDs to the readIds array
+    const allIds = notifs.map(n => n.id);
+    const newReadIds = Array.from(new Set([...readIds, ...allIds])); // Ensure unique IDs
+    
+    setReadIds(newReadIds);
+    localStorage.setItem("readNotifIds", JSON.stringify(newReadIds));
+  }
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -94,7 +115,7 @@ export function DashboardTopbar({ onToggleSidebar }: Props) {
           aria-label="Notifications"
         >
           <Bell className="w-[17px] h-[17px]" />
-          {notifs.length > 0 && (
+          {unreadNotifs.length > 0 && (
             <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-orange border border-white" />
           )}
         </button>
@@ -103,22 +124,39 @@ export function DashboardTopbar({ onToggleSidebar }: Props) {
           <div className="absolute top-full right-0 mt-3 w-[340px] max-w-[90vw] bg-white border border-ink/10 shadow-xl rounded-site z-50 overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-ink/10">
               <h4 className="font-semibold text-[14.5px]">Notifications</h4>
-              <button className="text-[12px] text-orange hover:underline">Mark all read</button>
+              {unreadNotifs.length > 0 && (
+                <button 
+                  onClick={handleMarkAllRead}
+                  className="text-[12px] text-orange hover:underline"
+                >
+                  Mark all read
+                </button>
+              )}
             </div>
             <div className="max-h-[340px] overflow-y-auto">
               {notifs.length === 0 ? (
                 <div className="p-6 text-center text-slate text-sm">You're all caught up! No new notifications.</div>
               ) : (
-                notifs.map(n => (
-                  <div key={n.id} className="flex gap-3 p-4 border-b border-ink/10 hover:bg-paper transition-colors">
-                    <span className="w-8 h-8 rounded-full bg-orange/10 text-orange flex items-center justify-center shrink-0 text-sm">🔔</span>
-                    <div>
-                      <span className="block text-[13.5px] font-semibold text-ink">{n.title}</span>
-                      <span className="block text-[12.5px] text-slate">{n.message}</span>
-                      <span className="block text-[11px] text-slate/70 mt-1">{new Date(n.created_at).toLocaleString()}</span>
+                notifs.map(n => {
+                  const isUnread = !readIds.includes(n.id);
+                  return (
+                    <div 
+                      key={n.id} 
+                      className={`flex gap-3 p-4 border-b border-ink/10 hover:bg-paper transition-colors ${
+                        isUnread ? 'bg-orange/5' : 'opacity-70'
+                      }`}
+                    >
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm ${
+                        isUnread ? 'bg-orange/10 text-orange' : 'bg-paper text-slate'
+                      }`}>🔔</span>
+                      <div>
+                        <span className="block text-[13.5px] font-semibold text-ink">{n.title}</span>
+                        <span className="block text-[12.5px] text-slate">{n.message}</span>
+                        <span className="block text-[11px] text-slate/70 mt-1">{new Date(n.created_at).toLocaleString()}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
