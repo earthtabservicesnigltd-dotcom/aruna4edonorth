@@ -144,7 +144,7 @@ export default function SchoolsPage() {
               style={{ background: "radial-gradient(circle at 90% 10%, rgba(249,115,22,0.3), transparent 50%)" }} 
             />
             <div className="relative z-10 flex items-start gap-5 flex-wrap justify-between">
-              <div className="flex items-start gap-5 flex-1 min-w-[200px]">
+              <div className="flex flex-col md:flex-row items-start gap-5 flex-1 min-w-[200px]">
                 <div className="w-14 h-14 rounded-site bg-orange/20 text-orange flex items-center justify-center shrink-0">
                   {(() => {
                     const Icon = iconMap[activeSchool.icon] || Building;
@@ -174,14 +174,14 @@ export default function SchoolsPage() {
                 {isCurrentProgComplete ? (
                   <Link 
                     href="/academy/certificates" 
-                    className="inline-flex items-center gap-2 bg-emerald text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-forest transition-colors"
+                    className="inline-flex items-center gap-2 w-full justify-center bg-emerald text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-forest transition-colors"
                   >
                     View Certificate <CheckCircle className="w-4 h-4" />
                   </Link>
                 ) : nextCourse && (
                   <Link 
                     href={`/academy/courses/${nextCourse.id}`}
-                    className="inline-flex items-center gap-2 bg-orange text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-orange-dark transition-colors"
+                    className="inline-flex items-center w-full justify-center gap-2 bg-orange text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-orange-dark transition-colors"
                   >
                     {completedCount > 0 ? "Continue Programme" : "Start Programme"} <ArrowRight className="w-4 h-4" />
                   </Link>
