@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/client";
 import { Building, TreePine, TrendingUp, Cpu, Package, Cog, ArrowRight, Lock, CheckCircle, PlayCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const iconMap: Record<string, any> = {
   "bi-building": Building,
@@ -15,12 +17,15 @@ const iconMap: Record<string, any> = {
 };
 
 export default function SchoolsPage() {
+  const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [activeSchool, setActiveSchool] = useState<any>(null);
   const [otherSchools, setOtherSchools] = useState<any[]>([]);
   const [progress, setProgress] = useState<Record<string, string>>({});
   const [nextCourse, setNextCourse] = useState<any>(null);
+  const [isCurrentProgComplete, setIsCurrentProgComplete] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -31,6 +36,8 @@ export default function SchoolsPage() {
           .select("id, programme_id")
           .eq("email", user.email)
           .single();
+
+        if (stu) setStudentId(stu.id);
 
         const { data: progs } = await supabase
           .from("programmes")
@@ -54,7 +61,13 @@ export default function SchoolsPage() {
             
             if (active) {
               const sortedCourses = active.courses?.sort((a: any, b: any) => a.order - b.order) || [];
-              const next = sortedCourses.find(c => progMap[c.id] === 'unlocked') || sortedCourses.find(c => progMap[c.id] !== 'completed');
+              const completedCount = sortedCourses.filter((c: any) => progMap[c.id] === 'completed').length;
+              const isComplete = sortedCourses.length > 0 && completedCount === sortedCourses.length;
+              
+              setIsCurrentProgComplete(isComplete);
+              
+              // If complete, next course is null. If not, find the unlocked one.
+              const next = isComplete ? null : (sortedCourses.find(c => progMap[c.id] === 'unlocked') || sortedCourses.find(c => progMap[c.id] !== 'completed'));
               setNextCourse(next);
               setActiveSchool({ ...active, sortedCourses });
             }
@@ -68,6 +81,37 @@ export default function SchoolsPage() {
     }
     fetchData();
   }, [supabase]);
+
+  async function handleSwitchProgramme(progId: string, firstCourseId?: string) {
+    if (!studentId) return;
+    setLoading(true);
+    
+    const { error } = await supabase
+      .from("students")
+      .update({ programme_id: progId })
+      .eq("id", studentId);
+      
+    if (error) {
+      toast.error("Failed to switch programme.");
+      setLoading(false);
+      return;
+    }
+    
+    if (firstCourseId) {
+      await supabase
+        .from("student_progress")
+        .upsert({
+          student_id: studentId,
+          course_id: firstCourseId,
+          status: 'unlocked',
+          lesson_completed: false,
+        }, { onConflict: "student_id,course_id" });
+        
+      router.push(`/academy/courses/${firstCourseId}`);
+    } else {
+      router.refresh();
+    }
+  }
 
   if (loading) {
     return (
@@ -100,7 +144,7 @@ export default function SchoolsPage() {
               style={{ background: "radial-gradient(circle at 90% 10%, rgba(249,115,22,0.3), transparent 50%)" }} 
             />
             <div className="relative z-10 flex items-start gap-5 flex-wrap justify-between">
-              <div className="flex flex-col lg:flex-row items-start gap-5 flex-1 min-w-[200px]">
+              <div className="flex items-start gap-5 flex-1 min-w-[200px]">
                 <div className="w-14 h-14 rounded-site bg-orange/20 text-orange flex items-center justify-center shrink-0">
                   {(() => {
                     const Icon = iconMap[activeSchool.icon] || Building;
@@ -108,7 +152,9 @@ export default function SchoolsPage() {
                   })()}
                 </div>
                 <div>
-                  <span className="font-mono text-[10.5px] uppercase tracking-widest text-orange block mb-1">Enrolled Programme</span>
+                  <span className="font-mono text-[10.5px] uppercase tracking-widest text-orange block mb-1">
+                    {isCurrentProgComplete ? "Programme Completed" : "Enrolled Programme"}
+                  </span>
                   <h2 className="font-display font-semibold text-[22px] md:text-[26px] leading-tight">{activeSchool.name}</h2>
                   <p className="text-[13.5px] text-white/70 mt-1 max-w-[60ch]">{activeSchool.blurb}</p>
                 </div>
@@ -125,11 +171,17 @@ export default function SchoolsPage() {
                   </div>
                 </div>
                 
-                {/* SINGLE CONTINUE BUTTON */}
-                {nextCourse && (
+                {isCurrentProgComplete ? (
+                  <Link 
+                    href="/academy/certificates" 
+                    className="inline-flex items-center gap-2 bg-emerald text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-forest transition-colors"
+                  >
+                    View Certificate <CheckCircle className="w-4 h-4" />
+                  </Link>
+                ) : nextCourse && (
                   <Link 
                     href={`/academy/courses/${nextCourse.id}`}
-                    className="inline-flex items-center justify-center text-center gap-2 bg-orange text-white px-5 py-2.5 mt-4 rounded-site font-semibold text-[13px] hover:bg-orange-dark transition-colors w-full"
+                    className="inline-flex items-center gap-2 bg-orange text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-orange-dark transition-colors"
                   >
                     {completedCount > 0 ? "Continue Programme" : "Start Programme"} <ArrowRight className="w-4 h-4" />
                   </Link>
@@ -138,10 +190,9 @@ export default function SchoolsPage() {
             </div>
           </div>
 
-          {/* Course Timeline (Purely Visual) */}
+          {/* Course Timeline */}
           <div className="p-6 md:p-8">
             <div className="relative pl-8 space-y-6">
-              {/* Vertical Line */}
               <div className="absolute left-[14px] top-2 bottom-2 w-[2px] bg-ink/10" />
 
               {activeSchool.sortedCourses.map((course: any, index: number) => {
@@ -149,7 +200,6 @@ export default function SchoolsPage() {
                 
                 return (
                   <div key={course.id} className="relative">
-                    {/* Node */}
                     <div className={`absolute -left-8 top-0 w-[30px] h-[30px] rounded-full flex items-center justify-center border-[2px] bg-white z-10 ${
                       status === 'completed' ? 'border-emerald text-emerald' :
                       status === 'unlocked' ? 'border-orange text-orange' : 'border-ink/20 text-slate/40'
@@ -159,7 +209,6 @@ export default function SchoolsPage() {
                        <Lock className="w-3.5 h-3.5" />}
                     </div>
 
-                    {/* Content (No Buttons, Just Info) */}
                     <div className={`flex items-center justify-between gap-4 flex-wrap pt-1 ${status === 'locked' ? 'opacity-60' : ''}`}>
                       <div className="flex-1 min-w-[200px]">
                         <span className="font-mono text-[10.5px] text-slate uppercase tracking-wide">Course {course.order}</span>
@@ -174,27 +223,11 @@ export default function SchoolsPage() {
                 );
               })}
             </div>
-
-            {/* Certificate CTA */}
-            {completedCount === totalCourses && totalCourses > 0 && (
-              <div className="mt-8 p-5 rounded-site border border-emerald/30 bg-emerald/5 flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-emerald" />
-                  <div>
-                    <h4 className="font-display font-semibold text-[15px] text-ink">Congratulations! You&apos;ve completed the programme.</h4>
-                    <p className="text-[12.5px] text-slate">{activeSchool.cert} is ready for download.</p>
-                  </div>
-                </div>
-                <Link href="/academy/certificates" className="bg-emerald text-white px-5 py-2.5 rounded-site font-semibold text-[13px] hover:bg-forest transition-colors">
-                  View Certificate
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       ) : (
         <div className="bg-white border border-ink/10 rounded-site p-8 text-center">
-          <p className="text-slate text-sm">You are not enrolled in a programme yet.</p>
+          <p className="text-slate text-sm">You are not enrolled in a programme yet. Choose one below to start.</p>
         </div>
       )}
 
@@ -205,16 +238,39 @@ export default function SchoolsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {otherSchools.map((school) => {
               const Icon = iconMap[school.icon] || Building;
+              const sortedCourses = school.courses?.sort((a: any, b: any) => a.order - b.order) || [];
+              const cCount = sortedCourses.filter((c: any) => progress[c.id] === 'completed').length;
+              const tCourses = sortedCourses.length;
+              const isCompleted = cCount === tCourses && tCourses > 0;
+              const firstCourse = sortedCourses[0];
+              
               return (
-                <div key={school.id} className="bg-white border border-ink/10 rounded-site p-5 opacity-80 hover:opacity-100 transition-opacity">
+                <div key={school.id} className="bg-white border border-ink/10 rounded-site p-5 flex flex-col">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-site bg-paper text-slate flex items-center justify-center shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <Lock className="w-4 h-4 text-slate/50 ml-auto" />
+                    {isCompleted && <CheckCircle className="w-4 h-4 text-emerald ml-auto" />}
                   </div>
                   <h4 className="font-display font-semibold text-[16px] text-ink leading-tight mb-1">{school.name}</h4>
-                  <p className="text-[12.5px] text-slate leading-relaxed line-clamp-2">{school.blurb}</p>
+                  <p className="text-[12.5px] text-slate leading-relaxed line-clamp-2 mb-4 flex-1">{school.blurb}</p>
+                  
+                  {isCompleted ? (
+                    <Link href="/academy/certificates" className="w-full bg-paper border border-ink/10 text-slate hover:bg-ink/10 py-2 rounded-site font-semibold text-[12.5px] transition-colors flex items-center justify-center gap-2">
+                      View Certificate <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  ) : isCurrentProgComplete ? (
+                    <button 
+                      onClick={() => handleSwitchProgramme(school.id, firstCourse?.id)}
+                      className="w-full bg-orange text-white hover:bg-orange-dark py-2 rounded-site font-semibold text-[12.5px] transition-colors flex items-center justify-center gap-2"
+                    >
+                      Enroll Now <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <div className="w-full bg-paper border border-ink/10 text-slate/50 py-2 rounded-site font-semibold text-[12.5px] flex items-center justify-center gap-2 cursor-not-allowed">
+                      <Lock className="w-3.5 h-3.5" /> Locked
+                    </div>
+                  )}
                 </div>
               );
             })}

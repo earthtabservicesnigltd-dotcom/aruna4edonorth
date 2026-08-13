@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-paper">
+      <div className="min-h-screen flex items-center justify-center bg-paper -mt-[72px]">
         <div className="w-12 h-12 rounded-full border-2 border-ink border-t-orange animate-spin" />
       </div>
     );

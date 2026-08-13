@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/client";
-import { ArrowRight, Video, CheckCircle, FileText, BadgeCheck, GraduationCap, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle, FileText, BadgeCheck, GraduationCap, Loader2 } from "lucide-react";
 
 export default function AcademyDashboardPage() {
   const supabase = createClient();
@@ -193,7 +193,7 @@ export default function AcademyDashboardPage() {
                   href={`/academy/courses/${currentCourse.id}/learn`} 
                   className="inline-flex items-center justify-center gap-2 bg-orange px-5 py-2.5 rounded-site font-semibold text-[13px] md:text-[14px] hover:bg-orange-dark transition-colors shrink-0 w-full sm:w-auto"
                 >
-                  Continue <Video className="w-4 h-4" />
+                  Continue <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
             </div>

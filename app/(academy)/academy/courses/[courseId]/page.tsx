@@ -111,7 +111,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
         )}
 
         <div className="p-8 space-y-6">
-          <p className="text-slate leading-relaxed">{course.description || "Course description coming soon."}</p>
 
           {/* School Roadmap UI */}
           {programmeCourses && programmeCourses.length > 0 && (

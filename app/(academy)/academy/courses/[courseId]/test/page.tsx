@@ -52,14 +52,16 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
     .eq("course_id", course.id)
     .single();
 
-  // Kick them back to the lesson if they haven't marked it complete
   if (!progress || !progress.lesson_completed) {
     redirect(`/academy/courses/${course.id}/learn`);
   }
 
-  // --- FIX: Fetch the actual next course ID if they passed ---
+  // --- FIX: Fetch the actual next course ID AND check if programme is complete ---
   let nextCourseId = null;
+  let isProgrammeComplete = false;
+  
   if (progress?.status === 'completed' && course.programme_id) {
+    // Check for next course
     const { data: nextData } = await supabase
       .from("courses")
       .select("id")
@@ -67,6 +69,23 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
       .eq("order", course.order + 1)
       .single();
     if (nextData) nextCourseId = nextData.id;
+
+    // Check if all courses in programme are completed
+    const { data: allProgCourses } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("programme_id", course.programme_id);
+      
+    const { data: completedProgCourses } = await supabase
+      .from("student_progress")
+      .select("course_id")
+      .eq("student_id", student?.id)
+      .in("course_id", allProgCourses?.map(c => c.id) || [])
+      .eq("status", "completed");
+      
+    if (allProgCourses && completedProgCourses && allProgCourses.length === completedProgCourses.length) {
+      isProgrammeComplete = true;
+    }
   }
 
   return (
@@ -84,9 +103,13 @@ export default async function TestPage({ params }: { params: Promise<{ courseId:
             <CheckCircle className="w-10 h-10 text-emerald mx-auto mb-3" />
             <h2 className="font-display font-semibold text-lg text-ink">You already passed!</h2>
             <p className="text-slate text-sm mt-1">Your score: {progress.score}%</p>
-            {/* --- FIX: Link directly to the next course --- */}
-            <Link href={nextCourseId ? `/academy/courses/${nextCourseId}` : "/academy/courses"} className="mt-4 inline-block bg-orange text-white font-semibold px-5 py-2 rounded-site text-sm hover:bg-orange-dark transition-colors">
-              {nextCourseId ? "Continue to Next Course" : "View Programme"}
+            
+            {/* --- FIX: Dynamic Button based on Programme Completion --- */}
+            <Link 
+              href={isProgrammeComplete ? "/academy/certificates" : nextCourseId ? `/academy/courses/${nextCourseId}` : "/academy/courses"} 
+              className="mt-4 inline-block bg-orange text-white font-semibold px-5 py-2 rounded-site text-sm hover:bg-orange-dark transition-colors"
+            >
+              {isProgrammeComplete ? "View Certificate" : nextCourseId ? "Continue to Next Course" : "View Programme"}
             </Link>
           </div>
         ) : questions && questions.length > 0 ? (
