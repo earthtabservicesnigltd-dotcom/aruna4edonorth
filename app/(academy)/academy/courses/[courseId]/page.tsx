@@ -41,7 +41,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
     .order("order", { ascending: true });
 
   // Fetch progress for ALL those courses
-  let courseProgressMap: Record<string, string> = {};
+  const courseProgressMap: Record<string, string> = {};
   if (student && programmeCourses) {
     const courseIds = programmeCourses.map(c => c.id);
     const { data: allProgress } = await supabase
@@ -110,50 +110,60 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
           </div>
         )}
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-6">
 
-          {/* School Roadmap UI */}
+          {/* --- REDESIGNED: Programme Roadmap Timeline --- */}
           {programmeCourses && programmeCourses.length > 0 && (
             <div className="bg-paper rounded-site p-5 border border-ink/5">
-              <h3 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate mb-4 flex items-center gap-2">
+              <h3 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate mb-5 flex items-center gap-2">
                 Programme Roadmap
               </h3>
-              <div className="space-y-3">
+              
+              <div className="relative pl-8 space-y-5">
+                {/* Vertical Connecting Line */}
+                <div className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-ink/10" />
+
                 {programmeCourses.map((c: any) => {
                   const cStatus = courseProgressMap[c.id] || 'locked';
                   const isActive = c.id === courseId;
                   const canVisit = cStatus === 'completed' || cStatus === 'unlocked';
 
                   return (
-                    <div key={c.id} className={`flex items-center gap-3 p-2 rounded-site transition-colors ${isActive ? 'bg-white shadow-sm' : ''}`}>
-                      <div className={`w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 border-2 ${
+                    <div key={c.id} className="relative">
+                      {/* Node Circle */}
+                      <div className={`absolute -left-8 top-0 w-[32px] h-[32px] rounded-full flex items-center justify-center shrink-0 border-2 bg-white z-10 ${
                         cStatus === 'completed' ? 'bg-emerald border-emerald text-white' :
                         cStatus === 'unlocked' ? 'border-orange text-orange' : 'border-slate/30 text-slate/40'
                       }`}>
-                        {cStatus === 'completed' ? <CheckCircle className="w-3.5 h-3.5" /> : 
-                         cStatus === 'unlocked' ? <PlayCircle className="w-3.5 h-3.5" /> : 
-                         <Lock className="w-3 h-3" />}
+                        {cStatus === 'completed' ? <CheckCircle className="w-4 h-4" /> : 
+                         cStatus === 'unlocked' ? <PlayCircle className="w-4 h-4" /> : 
+                         <Lock className="w-3.5 h-3.5" />}
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className={`text-[13px] font-medium leading-tight ${isActive ? 'text-ink' : cStatus === 'completed' ? 'text-emerald' : 'text-slate'}`}>
+                      {/* Content Block */}
+                      <div className={`flex flex-col gap-1.5 p-3 rounded-lg transition-colors ${isActive ? 'bg-white shadow-sm border border-ink/10' : 'border border-transparent'}`}>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-mono text-[10px] text-slate uppercase tracking-wide">Course {c.order}</span>
+                          {isActive && (
+                            <span className="text-[9px] font-mono uppercase tracking-wide bg-orange/10 text-orange px-2 py-0.5 rounded-full">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className={`text-[13.5px] font-medium leading-tight ${isActive ? 'text-ink' : cStatus === 'completed' ? 'text-emerald' : 'text-slate'}`}>
                           {c.title}
                         </div>
-                      </div>
 
-                      {canVisit && !isActive && (
-                        <Link 
-                          href={`/academy/courses/${c.id}`}
-                          className="text-[11px] font-mono uppercase tracking-wide text-orange hover:underline"
-                        >
-                          View
-                        </Link>
-                      )}
-                      {isActive && (
-                        <span className="text-[10px] font-mono uppercase tracking-wide bg-orange/10 text-orange px-2 py-1 rounded-full">
-                          Current
-                        </span>
-                      )}
+                        {canVisit && !isActive && (
+                          <Link 
+                            href={`/academy/courses/${c.id}`}
+                            className="text-[11px] font-mono uppercase tracking-wide text-orange hover:underline mt-1 self-start"
+                          >
+                            Review Course
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
