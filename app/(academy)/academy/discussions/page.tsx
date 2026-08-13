@@ -43,7 +43,6 @@ export default function DiscussionsPage() {
     <div className="space-y-8">
       <div>
         <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">PEER LEARNING</span>
-        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">Discussions & Comms</h1>
         <p className="text-[14.5px] text-slate mt-2 max-w-[70ch] leading-relaxed">
           Connect with your cohort, coordinate capstone projects, and ask questions during instructor office hours.
         </p>

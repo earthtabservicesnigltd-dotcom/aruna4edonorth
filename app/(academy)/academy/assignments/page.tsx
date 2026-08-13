@@ -100,7 +100,6 @@ export default function AssignmentsPage() {
         <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">
           {student?.programme?.toUpperCase() || "PROGRAMME"} · {student?.cohort?.toUpperCase() || "COHORT"}
         </span>
-        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">Assignments</h1>
         <p className="text-[14.5px] text-slate mt-2 max-w-[70ch] leading-relaxed">
           Complete your tasks and upload your documents before the deadline.
         </p>

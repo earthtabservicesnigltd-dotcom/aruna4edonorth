@@ -71,7 +71,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
             <form action={completeLesson.bind(null, course.id)} className="w-full max-w-xs">
               <button 
                 type="submit" 
-                className="w-full bg-orange text-white font-bold py-3 rounded-site hover:bg-orange-dark transition-colors text-sm"
+                className="w-full bg-orange text-white font-bold py-3 px-4 rounded-site hover:bg-orange-dark transition-colors text-sm"
               >
                 I&apos;ve Finished — Mark Lesson Complete
               </button>

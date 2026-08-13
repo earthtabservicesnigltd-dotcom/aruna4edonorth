@@ -32,7 +32,6 @@ const [active, setActive] = useState("All");
         .eq("status", "Published")
         // .gte("date", new Date().toISOString().slice(0, 10))
         .order("date", { ascending: true });
-      console.log('Events data:', data, "Error:", error)
       if (data) setEvents(data);
     }
     load();

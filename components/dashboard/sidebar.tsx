@@ -130,13 +130,11 @@ export function DashboardSidebar({ open, onClose }: Props) {
               <Icon className="w-[18px] h-[18px] shrink-0" />
               <span className="flex-1">{item.label}</span>
               
-              {/* Dynamic Smart Badges */}
+              {/* Only show the orange number badge if > 0. No green dots. */}
               {badgeCount && badgeCount > 0 ? (
                 <span className="font-mono text-[10px] bg-orange/20 text-orange px-1.5 py-0.5 rounded-full border border-orange/30">
                   {badgeCount}
                 </span>
-              ) : item.label === "Assignments" && badgeCount === 0 ? (
-                 <span className="w-2 h-2 rounded-full bg-emerald-400/50" title="All caught up"></span>
               ) : null}
             </Link>
           );

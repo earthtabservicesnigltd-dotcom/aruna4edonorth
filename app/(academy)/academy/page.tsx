@@ -123,20 +123,20 @@ export default function AcademyDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Band */}
-      <div className="bg-ink text-white rounded-site p-8 md:p-9 relative overflow-hidden">
+      <div className="bg-ink text-white rounded-site p-6 md:p-9 relative overflow-hidden">
         <div 
           className="absolute inset-0 pointer-events-none" 
           style={{ background: "radial-gradient(circle at 88% 15%, rgba(1,112,61,0.5), transparent 44%), radial-gradient(circle at 4% 96%, rgba(249,115,22,0.15), transparent 40%)" }} 
         />
-        <div className="relative z-10 flex items-center justify-between gap-6 flex-wrap">
-          <div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex-1">
             <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">
               {student?.cohort?.toUpperCase() || "COHORT"} · {currentCourse ? "CONTINUE LEARNING" : "WELCOME"}
             </span>
-            <h2 className="font-display font-semibold text-[24px] md:text-[32px] leading-tight">
+            <h2 className="font-display font-semibold text-[22px] md:text-[32px] leading-tight">
               Welcome back, {student?.name?.split(" ")[0] || "Student"}
             </h2>
-            <p className="text-[14.5px] text-white/72 mt-2 max-w-[52ch]">
+            <p className="text-[13.5px] md:text-[14.5px] text-white/72 mt-2 max-w-[52ch]">
               {currentCourse 
                 ? `You are currently on "${currentCourse.title}". Keep up the momentum and finish strong.`
                 : `Welcome to your ${student?.programme || "Academy"} dashboard. Click below to start your first course.`
@@ -145,7 +145,7 @@ export default function AcademyDashboardPage() {
           </div>
           <Link 
             href={currentCourse ? `/academy/courses/${currentCourse.id}` : "/academy/courses"} 
-            className="inline-flex items-center gap-2 bg-orange px-5 py-3 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0"
+            className="inline-flex items-center justify-center gap-2 bg-orange px-5 py-3 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0 w-full sm:w-auto"
           >
             {currentCourse ? "Resume Course" : "Start Course"} <ArrowRight className="w-4 h-4" />
           </Link>
@@ -153,46 +153,45 @@ export default function AcademyDashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => {
           const Icon = s.ico;
           return (
-            <div key={s.label} className="bg-white border border-ink/10 rounded-site p-5">
-              <div className="w-10 h-10 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
-                <Icon className="w-5 h-5" />
+            <div key={s.label} className="bg-white border border-ink/10 rounded-site p-4 md:p-5">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
-              <strong className="block font-display font-semibold text-[28px] leading-none">{s.value}</strong>
-              <span className="block text-[13px] text-slate mt-1.5">{s.label}</span>
+              <strong className="block font-display font-semibold text-[22px] md:text-[28px] leading-none">{s.value}</strong>
+              <span className="block text-[12px] md:text-[13px] text-slate mt-1.5">{s.label}</span>
             </div>
           );
         })}
       </div>
 
       {/* Main Dashboard Grid */}
-      <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {/* Today's Class */}
           <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
             <div className="p-5 border-b border-ink/10 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-[18px]">Today&apos;s Focus</h3>
+              <h3 className="font-display font-semibold text-[16px] md:text-[18px]">Today&apos;s Focus</h3>
               <span className="font-mono text-[10.5px] uppercase tracking-wide bg-orange/12 text-orange-dark px-2.5 py-1 rounded-site">Active</span>
             </div>
-            <div className="p-5 flex items-center gap-4 flex-wrap">
-              <div className="w-14 h-14 rounded-site bg-forest text-white flex flex-col items-center justify-center shrink-0">
+            <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-site bg-forest text-white flex items-center justify-center shrink-0">
                 <strong className="font-display text-xl leading-none">★</strong>
-                <span className="font-mono text-[9px] mt-1">TASK</span>
               </div>
-              <div className="flex-1 min-w-[200px]">
-                <h4 className="font-display font-semibold text-[16.5px] mb-1">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-display font-semibold text-[15px] md:text-[16.5px] mb-1 truncate">
                   {currentCourse?.title || "No active course"}
                 </h4>
-                <p className="text-[13px] text-slate">{student?.programme || "Programme"} · Lesson & Assessment</p>
+                <p className="text-[12px] md:text-[13px] text-slate">{student?.programme || "Programme"} · Lesson & Assessment</p>
               </div>
               {currentCourse && (
                 <Link 
                   href={`/academy/courses/${currentCourse.id}/learn`} 
-                  className="inline-flex items-center gap-2 bg-orange px-5 py-2.5 rounded-site font-semibold text-[14px] hover:bg-orange-dark transition-colors shrink-0"
+                  className="inline-flex items-center justify-center gap-2 bg-orange px-5 py-2.5 rounded-site font-semibold text-[13px] md:text-[14px] hover:bg-orange-dark transition-colors shrink-0 w-full sm:w-auto"
                 >
                   Continue <Video className="w-4 h-4" />
                 </Link>
@@ -203,7 +202,7 @@ export default function AcademyDashboardPage() {
           {/* Week Progress */}
           <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
             <div className="p-5 border-b border-ink/10 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-[18px]">This Week&apos;s Progress</h3>
+              <h3 className="font-display font-semibold text-[16px] md:text-[18px]">This Week&apos;s Progress</h3>
               <Link href="/academy/courses" className="font-mono text-[11.5px] text-forest hover:text-orange transition-colors">
                 View course
               </Link>
@@ -223,9 +222,9 @@ export default function AcademyDashboardPage() {
                   </span>
                   
                   <span className="font-mono text-[11px] text-slate w-10 shrink-0">{p.day}</span>
-                  <span className="text-[14px] font-medium flex-1 truncate">{p.title}</span>
+                  <span className="text-[13px] md:text-[14px] font-medium flex-1 truncate">{p.title}</span>
                   
-                  {p.status === 'done' && <span className="font-mono text-[10.5px] uppercase bg-emerald/10 text-emerald px-2 py-0.5 rounded-site">Done</span>}
+                  {p.status === 'done' && <span className="hidden sm:inline-block font-mono text-[10.5px] uppercase bg-emerald/10 text-emerald px-2 py-0.5 rounded-site">Done</span>}
                   {p.status === 'current' && <span className="font-mono text-[10.5px] uppercase bg-orange/12 text-orange-dark px-2 py-0.5 rounded-site">Today</span>}
                 </div>
               ))}
@@ -238,7 +237,7 @@ export default function AcademyDashboardPage() {
           {/* Deadlines */}
           <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
             <div className="p-5 border-b border-ink/10">
-              <h3 className="font-display font-semibold text-[18px]">Upcoming Deadlines</h3>
+              <h3 className="font-display font-semibold text-[16px] md:text-[18px]">Upcoming Deadlines</h3>
             </div>
             <div className="p-5">
               {deadlines.map((d, i) => {
@@ -247,10 +246,10 @@ export default function AcademyDashboardPage() {
                   <div key={i} className="flex items-center gap-3 py-3 border-b border-ink/10 last:border-0">
                     <Icon className="w-4 h-4 text-orange shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <strong className="block text-[14px] truncate">{d.title}</strong>
-                      <span className="block text-[12px] text-slate">{d.sub}</span>
+                      <strong className="block text-[13px] md:text-[14px] truncate">{d.title}</strong>
+                      <span className="block text-[11px] md:text-[12px] text-slate">{d.sub}</span>
                     </div>
-                    <span className="font-mono text-[11px] text-slate ml-auto">{d.when}</span>
+                    <span className="font-mono text-[10.5px] md:text-[11px] text-slate ml-auto shrink-0">{d.when}</span>
                   </div>
                 );
               })}
@@ -261,17 +260,17 @@ export default function AcademyDashboardPage() {
           {currentCourse && (
             <div className="bg-white border border-ink/10 rounded-site overflow-hidden">
               <div className="p-5 border-b border-ink/10 flex items-center justify-between">
-                <h3 className="font-display font-semibold text-[18px]">Continue Learning</h3>
+                <h3 className="font-display font-semibold text-[16px] md:text-[18px]">Continue Learning</h3>
                 <Link href="/academy/courses" className="font-mono text-[11.5px] text-forest hover:text-orange transition-colors">
                   All courses
                 </Link>
               </div>
               <div className="p-5">
                 <Link href={`/academy/courses/${currentCourse.id}`} className="block group">
-                  <div className="w-12 h-12 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
-                    <GraduationCap className="w-6 h-6" />
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-site bg-orange/10 text-orange flex items-center justify-center mb-3">
+                    <GraduationCap className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
-                  <h4 className="font-display font-semibold text-[19px] mb-3 truncate">{student?.programme || "Programme"}</h4>
+                  <h4 className="font-display font-semibold text-[17px] md:text-[19px] mb-3 truncate">{student?.programme || "Programme"}</h4>
                   
                   {/* Calculate Progress */}
                   {(() => {

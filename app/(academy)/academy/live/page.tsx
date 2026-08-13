@@ -50,7 +50,6 @@ export default function LivePage() {
     <div className="space-y-8">
       <div>
         <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">GOOGLE MEET</span>
-        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">Live Classes</h1>
         <p className="text-[14.5px] text-slate mt-2 max-w-[70ch] leading-relaxed">
           Group days, capstone sessions, and graduation run live. Join links open here 10 minutes before start.
         </p>

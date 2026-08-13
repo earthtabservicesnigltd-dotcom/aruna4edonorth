@@ -78,9 +78,6 @@ export default function SchedulePage() {
         <span className="font-mono text-[11px] tracking-widest text-orange block mb-2">
           {cohortName.toUpperCase()}
         </span>
-        <h1 className="font-display font-semibold text-[clamp(24px,3vw,32px)] leading-tight text-ink">
-          Weekly Schedule
-        </h1>
         <p className="text-[14.5px] text-slate mt-2 max-w-[70ch] leading-relaxed">
           Every cohort follows the same rhythm: learn, collaborate, practise, build, prove, then graduate. All classes run on Google Meet.
         </p>
