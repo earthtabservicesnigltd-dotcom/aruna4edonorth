@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/client"; // Kept your import path
 import Image from "next/image";
-import { Eye, EyeOff, ArrowRight, User, Key } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, User, Key, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -52,10 +52,10 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-[980px] grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8 items-center relative z-10">
         
         {/* Left Brand Section (Hidden on mobile) */}
-        <div className="text-white max-w-[460px] hidden lg:block animate-[fadeUp_0.9s_ease_both]">
+        <div className="text-white max-w-[460px] block animate-[fadeUp_0.9s_ease_both] flex flex-col items-center lg:items-start text-center lg:text-left">
           <div className="w-[84px] h-[84px] rounded-3xl bg-white/10 border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl mb-5 relative">
             <div className="absolute inset-[-30%] bg-[linear-gradient(120deg,transparent_40%,rgba(255,255,255,0.35),transparent_60%)] animate-[shine_4s_linear_infinite]"></div>
-            <Image src="/images/logo.png" alt="DICO Logo" width={60} height={60} className="relative z-10 object-contain" />
+            <Image src="/images/logo.png" alt="Logo" width={60} height={60} className="relative z-10 object-contain" />
           </div>
           <h1 className="font-display text-[clamp(30px,4vw,50px)] leading-[1.08] font-bold tracking-tight text-[#f8f9fb] drop-shadow-lg">
             Admin Portal
@@ -70,9 +70,9 @@ export default function AdminLoginPage() {
           
           {/* Card Header */}
           <div className="flex items-center justify-between gap-3 mb-6">
-            <h2 className="font-display text-[22px] text-ink font-semibold">Secure Access</h2>
-            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-forest bg-forest/10 border border-forest/20 px-2.5 py-1.5 rounded-full">
-              Campaign Control
+            <h2 className="font-display text-[18px] lg:text-[22px] text-ink font-semibold whitespace-nowrap">Secure Access</h2>
+            <span className="inline-flex items-center gap-2 text-[10px] lg:text-[11px] whitespace-nowrap font-bold uppercase tracking-wider text-forest bg-forest/10 border border-forest/20 px-2.5 py-1.5 rounded-full">
+              <ShieldCheck className="w-4 h-4"/> Campaign Control
             </span>
           </div>
 
