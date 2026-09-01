@@ -74,57 +74,84 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
+    let isMounted = true;
     const supabase = createClient();
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        router.push("/admin/login");
-        setLoading(false);
+
+    async function checkAdmin(currentSession: any) {
+      if (!currentSession) {
+        if (isMounted) {
+          setSession(null);
+          setIsAdmin(false);
+          setLoading(false);
+          router.push("/admin/login");
+        }
         return;
       }
 
-      const { data: admin } = await supabase
-        .from("admin_users")
-        .select("email")
-        .eq("email", session.user.email)
-        .maybeSingle();
+      try {
+        const { data: admin, error } = await supabase
+          .from("admin_users")
+          .select("email")
+          .eq("email", currentSession.user?.email)
+          .maybeSingle();
 
-      if (!admin) {
-        await supabase.auth.signOut();
-        router.push("/admin/login");
+        if (!isMounted) return;
+
+        if (error || !admin) {
+          try {
+            await supabase.auth.signOut();
+          } catch {}
+          setSession(null);
+          setIsAdmin(false);
+          setLoading(false);
+          router.push("/admin/login");
+          return;
+        }
+
+        setSession(currentSession);
+        setIsAdmin(true);
         setLoading(false);
-        return;
+      } catch (err) {
+        console.error("Auth check error:", err);
+        if (isMounted) setLoading(false);
       }
+    }
 
-      setSession(session);
-      setIsAdmin(true);
-      setLoading(false);
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      checkAdmin(session);
+    }).catch(() => {
+      if (isMounted) setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session) {
-        router.push("/admin/login");
+    // Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        if (isMounted) {
+          setSession(null);
+          setIsAdmin(false);
+          setLoading(false);
+          router.push("/admin/login");
+        }
         return;
       }
-      const { data: admin } = await supabase
-        .from("admin_users")
-        .select("email")
-        .eq("email", session.user.email)
-        .maybeSingle();
-      if (!admin) {
-        await supabase.auth.signOut();
-        router.push("/admin/login");
-        return;
+
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        checkAdmin(session);
       }
-      setSession(session);
-      setIsAdmin(true);
     });
 
-    return () => listener?.subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      listener?.subscription?.unsubscribe();
+    };
   }, [isLoginPage]);
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {}
     router.push("/admin/login");
   }
 
