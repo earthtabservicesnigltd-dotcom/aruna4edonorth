@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Play, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { VideoModal } from "@/components/ui/video-modal";
+import { StoryModal } from "@/components/ui/story-modal";
 
 interface PostItem {
   id: string;
@@ -44,6 +45,7 @@ export function NewsFeedSection() {
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState<{ url: string; title?: string } | null>(null);
+  const [activeStory, setActiveStory] = useState<PostItem | null>(null);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -60,22 +62,24 @@ export function NewsFeedSection() {
           );
           const candidates = published.length > 0 ? published : data;
 
-          const mapped: PostItem[] = candidates.map((item) => ({
-            id: item.id,
-            image_url: item.image_url || "/images/26.jpeg",
-            category: item.category || "News",
-            catClass: getCategoryColor(item.category || "News"),
-            date: item.date || new Date().toISOString().slice(0, 10),
-            title: item.title,
-            excerpt: item.excerpt || "",
-            video_url: item.video_url || item.rsvp_link || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            is_video:
-              item.category === "Media Features" ||
-              item.category === "Events" ||
-              Boolean(item.is_video) ||
-              Boolean(item.video_url),
-            status: item.status,
-          }));
+          const mapped: PostItem[] = candidates.map((item) => {
+            const hasVideo = Boolean(
+              item.video_url && item.video_url.startsWith("http")
+            );
+
+            return {
+              id: item.id,
+              image_url: item.image_url || "/images/26.jpeg",
+              category: item.category || "News",
+              catClass: getCategoryColor(item.category || "News"),
+              date: item.date || new Date().toISOString().slice(0, 10),
+              title: item.title,
+              excerpt: item.excerpt || "",
+              video_url: item.video_url || undefined,
+              is_video: hasVideo,
+              status: item.status,
+            };
+          });
           setPosts(mapped);
         }
       } catch (err) {
@@ -141,14 +145,14 @@ export function NewsFeedSection() {
                   className="border border-ink/12 rounded-site overflow-hidden bg-white hover:-translate-y-1 hover:shadow-lg transition-all group flex flex-col"
                 >
                   <div
-                    onClick={
-                      post.is_video
-                        ? () => setActiveVideo({ url: post.video_url || "", title: post.title })
-                        : undefined
-                    }
-                    className={`relative aspect-[16/10] bg-paper overflow-hidden ${
-                      post.is_video ? "cursor-pointer" : ""
-                    }`}
+                    onClick={() => {
+                      if (post.is_video) {
+                        setActiveVideo({ url: post.video_url || "", title: post.title });
+                      } else {
+                        setActiveStory(post);
+                      }
+                    }}
+                    className="relative aspect-[16/10] bg-paper overflow-hidden cursor-pointer"
                   >
                     <Image
                       src={imgSrc}
@@ -173,10 +177,16 @@ export function NewsFeedSection() {
                     <span className="font-mono text-[10.5px] tracking-wide text-slate mb-3">
                       {dateDisplay}
                     </span>
-                    <h3 className="font-display font-semibold text-[19px] leading-tight text-ink mb-2.5">
+                    <h3
+                      onClick={() => {
+                        if (post.is_video) setActiveVideo({ url: post.video_url || "", title: post.title });
+                        else setActiveStory(post);
+                      }}
+                      className="font-display font-semibold text-[19px] leading-tight text-ink mb-2.5 cursor-pointer hover:text-orange transition-colors line-clamp-2"
+                    >
                       {post.title}
                     </h3>
-                    <p className="text-sm leading-relaxed text-slate mb-4 flex-1">
+                    <p className="text-sm leading-relaxed text-slate mb-4 flex-1 line-clamp-3">
                       {post.excerpt}
                     </p>
                     {post.is_video ? (
@@ -190,12 +200,13 @@ export function NewsFeedSection() {
                         Watch video →
                       </button>
                     ) : (
-                      <a
-                        href="#"
+                      <button
+                        type="button"
+                        onClick={() => setActiveStory(post)}
                         className="inline-flex items-center gap-2 font-semibold text-sm text-orange hover:gap-3 transition-all self-start mt-auto"
                       >
                         Read more →
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -221,6 +232,17 @@ export function NewsFeedSection() {
         onClose={() => setActiveVideo(null)}
         videoUrl={activeVideo?.url}
         title={activeVideo?.title}
+      />
+
+      {/* Story Popup Modal */}
+      <StoryModal
+        isOpen={Boolean(activeStory)}
+        onClose={() => setActiveStory(null)}
+        title={activeStory?.title}
+        category={activeStory?.category}
+        date={activeStory ? formatDate(activeStory.date) : ""}
+        excerpt={activeStory?.excerpt}
+        image_url={activeStory?.image_url}
       />
     </section>
   );

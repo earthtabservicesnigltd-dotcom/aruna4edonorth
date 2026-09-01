@@ -7,6 +7,7 @@ import { Play } from "lucide-react";
 import { delay } from "@/lib/animation";
 import { createClient } from "@/lib/client";
 import { VideoModal } from "@/components/ui/video-modal";
+import { StoryModal } from "@/components/ui/story-modal";
 
 interface FeaturedPost {
   id: string;
@@ -35,6 +36,7 @@ export function FeaturedStorySection() {
   const [featured, setFeatured] = useState<FeaturedPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [isStoryOpen, setIsStoryOpen] = useState(false);
 
   useEffect(() => {
     async function loadFeatured() {
@@ -63,20 +65,20 @@ export function FeaturedStorySection() {
             ) || candidates[0];
 
           if (item) {
+            const hasVideo = Boolean(
+              item.video_url && item.video_url.startsWith("http")
+            );
+
             setFeatured({
               id: item.id,
               title: item.title,
-              category: item.category || "Events",
+              category: item.category || "News",
               excerpt: item.excerpt || "",
               date: item.date || new Date().toISOString().slice(0, 10),
               image_url: item.image_url || item.image || "/images/25.png",
-              video_url: item.video_url || item.rsvp_link || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+              video_url: item.video_url || undefined,
               read_time: item.read_time || "4 min read",
-              is_video:
-                item.category === "Events" ||
-                item.category === "Media Features" ||
-                Boolean(item.is_video) ||
-                Boolean(item.video_url),
+              is_video: hasVideo,
             });
           }
         }
@@ -115,14 +117,18 @@ export function FeaturedStorySection() {
         </span>
 
         <div
-          className="grid md:grid-cols-[1.15fr_0.85fr] border border-ink/12 rounded-site overflow-hidden rise in"
+          className="grid md:grid-cols-[1.15fr_0.85fr] border border-ink/12 rounded-site overflow-hidden rise in bg-white"
           style={delay(100)}
         >
           <div
-            onClick={featured.is_video ? () => setIsVideoOpen(true) : undefined}
-            className={`relative min-h-[260px] md:min-h-[380px] bg-paper group overflow-hidden ${
-              featured.is_video ? "cursor-pointer" : ""
-            }`}
+            onClick={() => {
+              if (featured.is_video) {
+                setIsVideoOpen(true);
+              } else {
+                setIsStoryOpen(true);
+              }
+            }}
+            className="relative min-h-[260px] md:min-h-[380px] bg-paper group overflow-hidden cursor-pointer"
           >
             <Image
               src={imageSrc}
@@ -144,10 +150,16 @@ export function FeaturedStorySection() {
             <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] tracking-wider uppercase text-forest bg-emerald/8 px-3 py-1.5 rounded-full mb-4 self-start">
               {featured.is_video ? "📺 " : "📰 "} {featured.category}
             </span>
-            <h2 className="font-display font-semibold text-[clamp(24px,2.6vw,34px)] leading-tight text-ink mb-4">
+            <h2
+              onClick={() => {
+                if (featured.is_video) setIsVideoOpen(true);
+                else setIsStoryOpen(true);
+              }}
+              className="font-display font-semibold text-[clamp(24px,2.6vw,34px)] leading-tight text-ink mb-4 cursor-pointer hover:text-orange transition-colors"
+            >
               {featured.title}
             </h2>
-            <p className="text-[15.5px] leading-relaxed text-slate mb-5">
+            <p className="text-[15.5px] leading-relaxed text-slate mb-5 line-clamp-3">
               {featured.excerpt}
             </p>
             <div className="flex gap-3.5 font-mono text-[11px] tracking-wide text-slate mb-6">
@@ -163,12 +175,13 @@ export function FeaturedStorySection() {
                 Watch video →
               </button>
             ) : (
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setIsStoryOpen(true)}
                 className="inline-flex items-center gap-2 font-semibold text-sm text-orange hover:gap-3 transition-all self-start"
               >
                 Read the full story →
-              </a>
+              </button>
             )}
           </div>
         </div>
@@ -180,6 +193,17 @@ export function FeaturedStorySection() {
         onClose={() => setIsVideoOpen(false)}
         videoUrl={featured.video_url}
         title={featured.title}
+      />
+
+      {/* Story Text Modal */}
+      <StoryModal
+        isOpen={isStoryOpen}
+        onClose={() => setIsStoryOpen(false)}
+        title={featured.title}
+        category={featured.category}
+        date={displayDate}
+        excerpt={featured.excerpt}
+        image_url={imageSrc}
       />
     </section>
   );
