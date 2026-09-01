@@ -17,7 +17,11 @@ import {
   CalendarDays,
   ClipboardList,
   Link2,
-  Bell // <-- Added Bell Icon
+  Bell,
+  Video,
+  MessageSquareQuote,
+  Images,
+  FileText,
 } from "lucide-react";
 
 const CAMPAIGN_NAV = [
@@ -25,7 +29,12 @@ const CAMPAIGN_NAV = [
   { label: "Volunteers", href: "/admin/volunteers", icon: Users },
   { label: "Donations", href: "/admin/donations", icon: DollarSign },
   { label: "Messages", href: "/admin/messages", icon: Mail },
-  { label: "News & Events", href: "/admin/posts", icon: Newspaper },
+  { label: "News & Updates", href: "/admin/posts", icon: Newspaper },
+  { label: "Campaign Events", href: "/admin/events", icon: CalendarDays },
+  { label: "Media & Videos", href: "/admin/media", icon: Video },
+  { label: "People Speak", href: "/admin/voxpop", icon: MessageSquareQuote },
+  { label: "Visits & Photos", href: "/admin/gallery", icon: Images },
+  { label: "Manifesto (PDF)", href: "/admin/manifesto", icon: FileText },
 ];
 
 const ACADEMY_NAV = [
@@ -35,7 +44,7 @@ const ACADEMY_NAV = [
   { label: "Schedules", href: "/admin/academy/schedules", icon: CalendarDays },  
   { label: "Assignments", href: "/admin/academy/assignments", icon: ClipboardList },
   { label: "Cohort Links", href: "/admin/academy/links", icon: Link2 },
-  { label: "Notifications", href: "/admin/academy/notifications", icon: Bell }, // <-- Added Link
+  { label: "Notifications", href: "/admin/academy/notifications", icon: Bell }, 
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

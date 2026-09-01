@@ -64,7 +64,7 @@ export default async function VerifyCertificatePage({ params }: { params: Promis
             </div>
 
             <p className="text-[10px] text-slate/60 mt-6 italic">
-              If you believe this certificate was issued in error, please contact support@arunaedonorth.ng
+              If you believe this certificate was issued in error, please contact support@abubakariaruna4senate.com
             </p>
           </div>
         ) : (

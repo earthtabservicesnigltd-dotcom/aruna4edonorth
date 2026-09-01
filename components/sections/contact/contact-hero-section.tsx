@@ -5,7 +5,7 @@ import { delay } from "@/lib/animation";
 
 const channels = [
   { icon: "📞", label: "Campaign Line", value: "+234 801 234 5678", href: "tel:+2348012345678" },
-  { icon: "✉️", label: "Email", value: "hello@arunaedonorth.ng", href: "mailto:hello@arunaedonorth.ng" },
+  { icon: "✉️", label: "Email", value: "hello@abubakariaruna4senate.com", href: "mailto:hello@abubakariaruna4senate.com" },
   { icon: "💬", label: "WhatsApp", value: "Message the field team", href: "https://wa.me/2348012345678" },
 ];
 

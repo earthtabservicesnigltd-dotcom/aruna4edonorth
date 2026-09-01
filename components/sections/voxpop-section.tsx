@@ -1,48 +1,103 @@
+// components/sections/voxpop-section.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import { SectionHead } from "./section-head";
 import { MediaCard } from "./media-card";
+import { VideoModal } from "@/components/ui/video-modal";
+import { createClient } from "@/lib/client";
 
-const voxpopItems = [
-  {
-    image: "/images/14.png",
-    alt: "Trader speaking",
-    duration: "01:20",
-    quote: "What I want from a senator is a working skills desk, not a rally.",
-    attribution: "Comfort Aigbe — Trader, Owan East",
-    delayMs: 0,
-  },
-  {
-    image: "/images/07.png",
-    alt: "Teacher speaking",
-    duration: "01:45",
-    quote: "His plan is the first one with a payment schedule attached to it.",
-    attribution: "Blessing Erhabor — Head Teacher, Etsako West",
-    delayMs: 120,
-  },
-  {
-    image: "/images/05.png",
-    alt: "Community leader speaking",
-    duration: "02:05",
-    quote: "He was the only official who came back to check on the borehole.",
-    attribution: "Osaze Igbinedion — Community Leader, Ovia North-East",
-    delayMs: 240,
-  },
-];
+interface VoxpopItem {
+  id?: string;
+  image: string;
+  alt: string;
+  duration: string;
+  quote: string;
+  attribution: string;
+  video_url?: string;
+  delayMs: number;
+}
 
 export function VoxpopSection() {
+  const [items, setItems] = useState<VoxpopItem[]>([]);
+  const [activeVideo, setActiveVideo] = useState<{ url: string; title?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadVoxpop() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("voxpop")
+          .select("*")
+          .order("created_at", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const published = data.filter(
+            (v: any) => !v.status || v.status.toLowerCase() === "published"
+          );
+          setItems(
+            published.map((v: any, idx: number) => ({
+              id: v.id,
+              image: v.image_url || "/images/14.png",
+              alt: v.attribution,
+              duration: v.duration || "01:30",
+              quote: v.quote,
+              attribution: v.attribution,
+              video_url: v.video_url || undefined,
+              delayMs: idx * 120,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Error loading voxpop items:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadVoxpop();
+  }, []);
+
+  if (!loading && items.length === 0) {
+    return null;
+  }
+
   return (
     <section id="voxpop" className="py-25">
       <div className="max-w-site mx-auto px-8">
         <SectionHead
           number="IN THEIR WORDS"
-          title={<>People of Edo North <span className="accent">Speak</span></>}
+          title={
+            <>
+              People of Edo North <span className="accent">Speak</span>
+            </>
+          }
         />
 
         <div className="voxpop-grid">
-          {voxpopItems.map((item) => (
-            <MediaCard key={item.attribution} {...item} variant="voxpop" />
+          {items.map((item) => (
+            <MediaCard
+              key={item.id || item.attribution}
+              {...item}
+              variant="voxpop"
+              onPlay={
+                item.video_url
+                  ? (url, title) => setActiveVideo({ url, title: title || item.attribution })
+                  : undefined
+              }
+            />
           ))}
         </div>
       </div>
+
+      {/* Video Modal Popup */}
+      <VideoModal
+        isOpen={Boolean(activeVideo)}
+        onClose={() => setActiveVideo(null)}
+        videoUrl={activeVideo?.url}
+        title={activeVideo?.title}
+      />
     </section>
   );
 }

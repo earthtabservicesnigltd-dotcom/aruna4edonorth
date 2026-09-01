@@ -4,15 +4,15 @@ import { useEffect } from "react";
 
 export function useScrollReveal() {
   useEffect(() => {
-    const elements = document.querySelectorAll(".rise");
-
     if (
       !("IntersectionObserver" in window) ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      elements.forEach((el) => el.classList.add("in"));
+      document.querySelectorAll(".rise").forEach((el) => el.classList.add("in"));
       return;
     }
+
+    const observedSet = new WeakSet<Element>();
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -23,11 +23,35 @@ export function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px -4% 0px" }
     );
 
-    elements.forEach((el) => observer.observe(el));
+    function scanElements() {
+      const elements = document.querySelectorAll(".rise:not(.in)");
+      elements.forEach((el) => {
+        if (!observedSet.has(el)) {
+          observedSet.add(el);
+          observer.observe(el);
+        }
+      });
+    }
 
-    return () => observer.disconnect();
+    // Initial scan
+    scanElements();
+
+    // Observe dynamic DOM changes for async components
+    const mutationObserver = new MutationObserver(() => {
+      scanElements();
+    });
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
   }, []);
 }

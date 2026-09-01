@@ -72,9 +72,8 @@ export function ContactFormSection() {
                   <div className="flex flex-wrap gap-2.5">
                     {topics.map((t) => (
                       <button key={t} type="button" onClick={() => setActiveTopic(t)}
-                        className={`font-mono text-xs px-3.5 py-2 rounded-site border transition-colors ${
-                          activeTopic === t ? "bg-forest text-white border-forest" : "bg-paper text-ink border-ink/15 hover:border-orange hover:text-orange"
-                        }`}
+                        className={`font-mono text-xs px-3.5 py-2 rounded-site border transition-colors ${activeTopic === t ? "bg-forest text-white border-forest" : "bg-paper text-ink border-ink/15 hover:border-orange hover:text-orange"
+                          }`}
                       >
                         {t}
                       </button>
@@ -142,7 +141,7 @@ export function ContactFormSection() {
                 {[
                   { icon: "📍", title: "Address", text: "Aruna Campaign House\n14 Sapele Road, Auchi\nEtsako West, Edo State" },
                   { icon: "🕐", title: "Office Hours", text: "Mon – Fri · 9:00am – 5:00pm\nSat · 10:00am – 2:00pm" },
-                  { icon: "✉️", title: "Email", text: "hello@arunaedonorth.ng", href: "mailto:hello@arunaedonorth.ng" },
+                  { icon: "✉️", title: "Email", text: "hello@abubakariaruna4senate.com", href: "mailto:hello@abubakariaruna4senate.com" },
                   { icon: "📞", title: "Phone", text: "+234 801 234 5678", href: "tel:+2348012345678" },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-3.5 items-start py-3.5 border-b border-ink/15 last:border-0 first:pt-0 last:pb-0">
