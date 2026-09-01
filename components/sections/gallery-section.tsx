@@ -6,6 +6,7 @@ import Image from "next/image";
 import { SectionHead } from "./section-head";
 import { delay } from "@/lib/animation";
 import { createClient } from "@/lib/client";
+import { ImageModal } from "@/components/ui/image-modal";
 
 interface GalleryPhoto {
   id?: string;
@@ -19,6 +20,7 @@ interface GalleryPhoto {
 
 export function GallerySection() {
   const [items, setItems] = useState<GalleryPhoto[]>([]);
+  const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,13 +76,21 @@ export function GallerySection() {
 
         <div className="gallery-grid">
           {items.map((item) => (
-            <a
+            <div
               key={item.id || item.cap}
-              href={item.src}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`gallery-item rise ${item.tall ? "tall" : ""} ${item.wide ? "wide" : ""}`}
+              onClick={() => setSelectedPhoto(item)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setSelectedPhoto(item);
+                }
+              }}
+              className={`gallery-item rise in cursor-pointer group ${
+                item.tall ? "tall" : ""
+              } ${item.wide ? "wide" : ""}`}
               style={delay(item.delayMs)}
+              title={`Click to view "${item.cap}"`}
             >
               <Image
                 src={item.src}
@@ -90,10 +100,19 @@ export function GallerySection() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="gallery-cap">{item.cap}</span>
-            </a>
+            </div>
           ))}
         </div>
       </div>
+
+      {/* In-page Lightbox Photo Modal */}
+      <ImageModal
+        isOpen={Boolean(selectedPhoto)}
+        onClose={() => setSelectedPhoto(null)}
+        imageSrc={selectedPhoto?.src}
+        caption={selectedPhoto?.cap}
+        alt={selectedPhoto?.alt}
+      />
     </section>
   );
 }

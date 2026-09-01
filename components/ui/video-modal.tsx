@@ -78,22 +78,25 @@ export function VideoModal({ isOpen, onClose, videoUrl, title }: VideoModalProps
       role="dialog"
       aria-modal="true"
       aria-label={title || "Video Player"}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-ink/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-white/35 backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl bg-black rounded-site overflow-hidden shadow-2xl border border-white/10"
+        className="relative w-full max-w-4xl bg-white rounded-site overflow-hidden shadow-2xl border border-ink/15"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with Title and Close Button */}
-        <div className="flex items-center justify-between px-5 py-3.5 bg-ink border-b border-white/10 text-white">
-          <h3 className="font-display font-semibold text-[15px] sm:text-[17px] truncate max-w-[80%]">
-            {title || "Watch Video"}
-          </h3>
+        <div className="flex items-center justify-between px-5 py-3.5 bg-paper border-b border-ink/10 text-ink">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-orange animate-pulse" />
+            <h3 className="font-display font-semibold text-[15px] sm:text-[17px] truncate max-w-[450px]">
+              {title || "Hear It From Him Directly"}
+            </h3>
+          </div>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-full text-slate hover:text-ink hover:bg-ink/8 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
