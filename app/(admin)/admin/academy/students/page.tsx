@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Award } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -67,12 +67,13 @@ export default function AdminStudentsPage() {
               <th className="px-5 py-3.5 font-medium">Programme</th>
               <th className="px-5 py-3.5 font-medium">Cohort</th>
               <th className="px-5 py-3.5 font-medium">Status</th>
+              <th className="px-5 py-3.5 font-medium text-right">Certificate</th>
             </tr>
           </thead>
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-10 text-slate text-sm">No students found.</td>
+                <td colSpan={7} className="text-center py-10 text-slate text-sm">No students found.</td>
               </tr>
             ) : (
               students.map((stu) => (
@@ -93,6 +94,14 @@ export default function AdminStudentsPage() {
                     }`}>
                       {stu.status || "Unknown"}
                     </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <Link
+                      href={`/admin/academy/students/${stu.id}/certificate`}
+                      className="inline-flex items-center gap-1 font-mono text-[11px] text-orange hover:text-orange-dark font-semibold px-2.5 py-1 rounded-site hover:bg-orange/10 transition-colors"
+                    >
+                      <Award className="w-3.5 h-3.5" /> Preview
+                    </Link>
                   </td>
                 </tr>
               ))

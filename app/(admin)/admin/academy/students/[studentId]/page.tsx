@@ -179,18 +179,43 @@ export default function AdminStudentDetailPage() {
 
           {/* Certificates Card */}
           <div className="bg-white border border-ink/10 rounded-site p-6">
-            <h3 className="font-display font-semibold text-[16px] text-ink mb-4 border-b border-ink/10 pb-3">Certificates</h3>
+            <div className="flex items-center justify-between border-b border-ink/10 pb-3 mb-4">
+              <h3 className="font-display font-semibold text-[16px] text-ink">Certificates</h3>
+              <Link
+                href={`/admin/academy/students/${studentId}/certificate`}
+                className="font-mono text-[10.5px] uppercase tracking-wider text-orange hover:text-orange-dark font-semibold inline-flex items-center gap-1"
+              >
+                Preview
+              </Link>
+            </div>
+
             {certificates.length === 0 ? (
-              <p className="text-slate text-[13px] text-center py-4">No certificates earned yet.</p>
+              <div className="text-center py-4 space-y-3">
+                <p className="text-slate text-[13px]">No certificate record yet.</p>
+                <Link
+                  href={`/admin/academy/students/${studentId}/certificate`}
+                  className="inline-flex items-center justify-center gap-1.5 w-full bg-orange/10 hover:bg-orange text-orange hover:text-white font-semibold py-2 px-3 rounded-site text-xs transition-colors"
+                >
+                  <Award className="w-3.5 h-3.5" /> Preview Student Certificate
+                </Link>
+              </div>
             ) : (
               <div className="space-y-3">
                 {certificates.map((cert) => (
-                  <div key={cert.id} className="flex items-center gap-3 p-3 bg-emerald/5 border border-emerald/20 rounded-site">
-                    <Award className="w-5 h-5 text-emerald shrink-0" />
-                    <div>
-                      <div className="text-[13px] font-medium text-ink">{cert.programme_name}</div>
-                      <div className="font-mono text-[10px] text-slate">{cert.certificate_id}</div>
+                  <div key={cert.id} className="p-3 bg-emerald/5 border border-emerald/20 rounded-site space-y-2">
+                    <div className="flex items-start gap-3">
+                      <Award className="w-5 h-5 text-emerald shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{cert.programme_name}</div>
+                        <div className="font-mono text-[10px] text-slate">{cert.certificate_id}</div>
+                      </div>
                     </div>
+                    <Link
+                      href={`/admin/academy/students/${studentId}/certificate`}
+                      className="inline-flex items-center justify-center gap-1.5 w-full bg-[#01381D] hover:bg-orange text-white font-semibold py-1.5 px-3 rounded-site text-[11px] transition-colors"
+                    >
+                      <Award className="w-3 h-3" /> Preview & Download
+                    </Link>
                   </div>
                 ))}
               </div>

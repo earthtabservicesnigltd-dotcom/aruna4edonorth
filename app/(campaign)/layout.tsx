@@ -13,7 +13,7 @@ const Layout = ({children}: PropsWithChildren) => {
         <ClientLayout>
             <Header />
             <IndexStrip />
-            <main className="max-w-site">{children}</main>
+            <main className="max-w-site mx-auto">{children}</main>
             <Footer />
         </ClientLayout>
     </>

@@ -72,12 +72,14 @@ export default async function CertificateViewPage({ params }: { params: Promise<
   }
 
   // 5. Map the database data to your CertificateCard interface
+  const programmeTitle = programme.name || (programme.cert ? programme.cert.replace(/^professional\s+certificate\s+in\s+/i, '') : "Programme");
+
   const certData: CertificateData = {
     certificate_id: certId,
     recipient_name: student?.name || "Student",
-    certificate_title: programme.cert || `${programme.name} Programme`,
+    certificate_title: programmeTitle,
     issued_at: issuedAt || new Date().toISOString(),
-    duration: "Intensive Online Programme"
+    duration: (programme as any)?.duration || "8 Weeks"
   };
 
   return (

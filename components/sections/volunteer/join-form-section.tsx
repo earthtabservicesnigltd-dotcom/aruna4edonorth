@@ -117,7 +117,10 @@ export function JoinFormSection() {
       });
       if (!response.ok) throw new Error("Submission failed");
       const result = await response.json();
-      setVolunteerData({ ...result.volunteer, photo_url: photoPreview });
+      setVolunteerData({
+        ...result.volunteer,
+        photo_url: photoBase64 || photoPreview || result.volunteer?.photo_url || null,
+      });
       setStep("card");
     } catch (error) {
       toast.error("Something went wrong. Please try again.");

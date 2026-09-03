@@ -23,6 +23,7 @@ export const footerQuickLinks = mainNav;
 export const footerInvolvedLinks = [
   { title: "Events", href: "/events" },
   { title: "Volunteer", href: "/volunteer" },
+  { title: "Verify Volunteer", href: "/verify" },
   { title: "Donate", href: "/donate" },
   { title: "Contact", href: "/contact" },
   { title: "Talk to Abubakari", href: "/talk-to-abubakari" },

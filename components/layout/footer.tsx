@@ -26,7 +26,7 @@ export function Footer() {
     <footer className="bg-ink text-white pt-16 pb-7 border-t-[3px] border-orange">
       <div className="max-w-site mx-auto px-8">
         {/* Slogan + newsletter */}
-        <div className="rise flex items-center justify-between flex-wrap gap-6 pb-11 border-b border-white/14">
+        <div className="flex items-center justify-between flex-wrap gap-6 pb-11 border-b border-white/14">
           <h2 className="font-display font-semibold text-[clamp(26px,3.2vw,40px)] leading-tight max-w-[16ch]">
             Edo North First. <em className="text-orange not-italic">Progress Always.</em>
           </h2>
@@ -70,8 +70,7 @@ export function Footer() {
 
         {/* Main grid */}
         <div
-          className="rise grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-11 py-11 border-b border-white/14"
-          style={delay(100)}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-11 py-11 border-b border-white/14"
         >
           {/* Brand */}
           <div className="lg:col-span-1 md:col-span-2">
@@ -201,8 +200,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div
-          className="rise pt-[26px] flex justify-between flex-wrap gap-2.5 font-mono text-[11px] tracking-wide text-white/50"
-          style={delay(200)}
+          className="pt-[26px] flex justify-between flex-wrap gap-2.5 font-mono text-[11px] tracking-wide text-white/50"
         >
           <span>
             &copy; 2027 Comr. Aruna Abubakari Campaign &middot; All rights

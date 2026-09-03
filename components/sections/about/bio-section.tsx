@@ -13,15 +13,30 @@ export function BioSection() {
           title={<>Full <span className="accent">Biography</span></>}
         />
 
-        <div className="space-y-5 max-w-[760px] lg:max-w-none">
-          <p className="text-base leading-[1.9] text-slate rise" style={delay(80)}>
-            Comr. Aruna Abubakari began his career in public service through grassroots community leadership, where he witnessed firsthand the daily challenges facing schools, healthcare facilities, and rural communities across Edo North. Those early experiences continue to shape the values and priorities that define his leadership today.
+        <div className="space-y-6 max-w-[840px] text-slate text-[16.5px] leading-[1.85]">
+          <p className="rise font-medium text-ink/90 text-[18px] leading-relaxed" style={delay(80)}>
+            Comrade Aruna Abubakari is a community development advocate, entrepreneur, real estate developer, and public servant with over three decades of leadership experience spanning infrastructure development, housing, agriculture, electrification, and grassroots empowerment across Edo State.
           </p>
-          <p className="text-base leading-[1.9] text-slate rise" style={delay(120)}>
-            For nearly two decades, he has served in both community development and public administration, earning respect for his hands-on approach, transparency, and accountability. Known for personally monitoring projects and ensuring public resources are properly utilized, supporters see him as a dependable problem-solver committed to delivering meaningful results rather than empty promises.
+          <p className="rise" style={delay(120)}>
+            Born on 12th September 1974, he is an indigene of Jagbe Ward, Etsako West Local Government Area of Edo State, Nigeria. His journey has been defined by a commitment to community service, sustainable development, and improving the lives of the people.
           </p>
-          <p className="text-base leading-[1.9] text-slate rise" style={delay(160)}>
-            His experience spans local government administration, state-level policy implementation, and independent civic monitoring — a combination that gives him a rare vantage point on how public funds actually move, and where they get stuck, between Abuja and an Edo North ward.
+          <p className="rise" style={delay(160)}>
+            His professional career began with the Power Holding Company of Nigeria (PHCN), where he served in various capacities including Ughelli Power Generation Station, Benin Zonal Office, Sokponba Business District, and later as Business Manager of PHCN Benin Distribution Company. These roles provided him with extensive experience in power administration, project execution, and public service delivery.
+          </p>
+          <p className="rise" style={delay(200)}>
+            A strong advocate for workers&apos; welfare and responsible leadership, Comrade Aruna served in different capacities within the National Union of Electricity Employees (NUEE), eventually becoming Edo State Secretary, where he promoted integrity, transparency, and effective representation.
+          </p>
+          <p className="rise" style={delay(240)}>
+            Beyond the power sector, he has built a remarkable record in real estate, engineering, agriculture, and community development. As the Executive Director of Touch Engineering Properties and Construction, he has provided strategic leadership in housing, infrastructure, and property development projects.
+          </p>
+          <p className="rise" style={delay(280)}>
+            He also served as the Managing Director/Chief Executive Officer of City of Goshen Housing Development Company Limited and as Edo State Chairman of the Real Estate Developers Association of Nigeria (REDAN), contributing significantly to the growth of the real estate sector.
+          </p>
+          <p className="rise" style={delay(320)}>
+            With academic qualifications including membership of the Association of National Accountants of Nigeria (ANAN), an Advanced Diploma in Accounting from Obafemi Awolowo University, Ile-Ife, and a National Diploma in Banking and Finance from the Federal Polytechnic, Oko, he combines professional expertise with practical leadership experience.
+          </p>
+          <p className="rise font-semibold text-ink pt-2" style={delay(360)}>
+            Today, as the Edo North Senatorial Candidate, Comrade Aruna Abubakari continues to champion purposeful leadership, economic empowerment, sustainable development, and effective representation for the people of Edo North.
           </p>
         </div>
       </div>

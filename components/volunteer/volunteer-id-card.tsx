@@ -1,32 +1,74 @@
 // components/volunteer/volunteer-id-card.tsx
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import Image from "next/image";
+import { Globe, Phone, Mail, Camera, Download } from "lucide-react";
 
 interface VolunteerData {
   full_name: string;
   email: string;
   phone: string;
   lga: string;
-  skills: string[];
+  skills?: string[];
   volunteer_id: string;
-  created_at: string;
+  created_at?: string;
+  photo_url?: string | null;
 }
+
+const skillMap: Record<string, string> = {
+  media: "MEDIA & CONTENT",
+  canvassing: "CANVASSING",
+  logistics: "LOGISTICS",
+  digital: "DIGITAL & SOCIAL",
+  mobilization: "MOBILIZATION",
+  events: "EVENT SUPPORT",
+};
 
 export function VolunteerIDCard({ volunteer }: { volunteer: VolunteerData }) {
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
-  const [photo, setPhoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fullName = volunteer.full_name.toUpperCase();
-  const initials = volunteer.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-  const areaOfService = volunteer.skills?.[0]?.toUpperCase() ?? "GENERAL";
-  const dateRegistered = new Date(volunteer.created_at).toLocaleDateString("en-GB", {
-    day: "2-digit", month: "long", year: "numeric",
-  }).toUpperCase();
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify/${volunteer.volunteer_id.replace(/\//g, "-")}`;
+  // Initialize photo with volunteer.photo_url if provided
+  const [photo, setPhoto] = useState<string | null>(volunteer.photo_url || null);
+
+  useEffect(() => {
+    if (volunteer.photo_url) {
+      setPhoto(volunteer.photo_url);
+    }
+  }, [volunteer.photo_url]);
+
+  const fullName = (volunteer.full_name || "VOLUNTEER NAME").toUpperCase();
+  const idNumber = (volunteer.volunteer_id || "AA/EDN/2027/0001").toUpperCase();
+
+  // Determine display position
+  const firstSkill = volunteer.skills?.[0];
+  const position = firstSkill
+    ? skillMap[firstSkill] || firstSkill.toUpperCase()
+    : "VOLUNTEER";
+
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin || "https://www.abubakariaruna4senate.com";
+  const verifyUrl = `${siteUrl}/verify/${idNumber.replace(/\//g, "-")}`;
+
+  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (typeof event.target?.result === "string") {
+        setPhoto(event.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
 
   async function downloadCard(ref: React.RefObject<HTMLDivElement | null>, filename: string) {
     if (!ref.current) return;
@@ -34,211 +76,380 @@ export function VolunteerIDCard({ volunteer }: { volunteer: VolunteerData }) {
     const jsPDF = (await import("jspdf")).default;
 
     const canvas = await html2canvas(ref.current, {
-      scale: 3, useCORS: true, logging: false,
-      onclone: (clonedDoc) => {
-        const el = clonedDoc.body;
-        el.style.setProperty("--color-ink", "#01381D");
-        el.style.setProperty("--color-orange", "#F97316");
-      },
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: null,
     });
 
     const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 3, canvas.height / 3] });
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [canvas.width / 3, canvas.height / 3],
+    });
     pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 3, canvas.height / 3);
     pdf.save(`${filename}.pdf`);
   }
 
-  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => setPhoto(event.target?.result as string);
-    reader.readAsDataURL(file);
-  }
-
   return (
-    <div className="flex flex-col items-center gap-8 py-8 px-4">
-      <h2 className="font-display text-3xl text-center">
-        YOUR <span className="text-orange">ID CARD</span>
-      </h2>
-      <p className="text-slate text-sm text-center -mt-4">
-        Upload your photo, preview the card, then download.
-      </p>
-
-      {/* Photo upload */}
-      <label className="cursor-pointer flex items-center gap-2 bg-paper border border-ink/15 rounded-site px-5 py-3 hover:border-orange transition-colors">
-        <span className="text-lg">📸</span>
-        <span className="text-sm font-medium text-ink">{photo ? "Change Photo" : "Upload Your Photo"}</span>
-        <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-      </label>
-
-      <div className="flex flex-col lg:flex-row gap-8 items-start justify-center w-full">
-        {/* ── FRONT ── */}
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate">Front</p>
-          <div ref={frontRef} className="w-[340px] min-h-[520px] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white relative font-sans">
-            {/* Header */}
-            <div className="bg-ink px-4 py-3 flex items-center gap-3">
-              <Image src="/images/logo.png" alt="Campaign" width={48} height={48} className="object-contain rounded" />
-              <div className="w-px h-10 bg-white/30" />
-              <div>
-                <p className="text-white font-black text-xl leading-none tracking-tight">AA</p>
-                <p className="text-white text-[9px] leading-tight font-semibold">ARUNA ABUBAKARI<br />SENATORIAL CAMPAIGN</p>
-              </div>
-            </div>
-            {/* Tagline */}
-            <div className="bg-white px-4 py-2 border-b border-gray-100">
-              <p className="text-ink font-black text-sm tracking-wide">PEOPLE FIRST. <span className="text-orange">PROGRESS ALWAYS.</span></p>
-              <p className="text-gray-400 text-[9px] tracking-[0.15em]">LEADERSHIP · ACCOUNTABILITY · PROGRESS</p>
-            </div>
-            {/* ID Card Label */}
-            <div className="bg-ink px-4 py-2 flex items-center justify-between">
-              <p className="text-white font-black text-sm tracking-widest">VOLUNTEER ID CARD</p>
-              <div className="flex gap-1">
-                <div className="w-3 h-5 bg-orange skew-x-[-10deg]" />
-                <div className="w-3 h-5 bg-orange skew-x-[-10deg]" />
-              </div>
-            </div>
-            {/* Body */}
-            <div className="px-4 pt-4 pb-2 flex gap-4 relative">
-              <div className="absolute right-2 top-2 opacity-[0.06]">
-                <Image src="/images/logo.png" alt="" width={128} height={128} />
-              </div>
-              {/* Photo */}
-              <div className="shrink-0">
-                <div className="w-[100px] h-[120px] border-2 border-ink rounded overflow-hidden bg-gray-100">
-                  {photo ? (
-                    <Image src={photo} alt="Volunteer" width={100} height={120} className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl font-bold">{initials}</div>
-                  )}
-                </div>
-              </div>
-              {/* Info */}
-              <div className="flex-1 space-y-2">
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">NAME:</p>
-                  <p className="font-black text-sm leading-tight text-gray-900">{fullName}</p>
-                </div>
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">VOLUNTEER ID:</p>
-                  <p className="font-black text-sm text-orange">{volunteer.volunteer_id}</p>
-                </div>
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">LGA:</p>
-                  <p className="font-bold text-sm text-gray-900">{volunteer.lga.toUpperCase()}</p>
-                </div>
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">PHONE:</p>
-                  <p className="font-bold text-sm text-gray-900">{volunteer.phone}</p>
-                </div>
-              </div>
-            </div>
-            {/* Bottom info + QR */}
-            <div className="px-4 pb-2 flex justify-between items-end">
-              <div className="space-y-1.5">
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">AREA OF SERVICE:</p>
-                  <p className="font-bold text-xs text-gray-900">{areaOfService}</p>
-                </div>
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">EMAIL:</p>
-                  <p className="font-bold text-xs text-gray-900">{volunteer.email.toLowerCase()}</p>
-                </div>
-                <div>
-                  <p className="text-ink text-[9px] font-bold tracking-widest">DATE REGISTERED:</p>
-                  <p className="font-bold text-xs text-gray-900">{dateRegistered}</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="border-2 border-ink p-1 rounded">
-                  <QRCodeSVG value={verifyUrl} size={72} fgColor="#01381D" bgColor="#ffffff" />
-                </div>
-                <p className="text-[8px] text-gray-400 tracking-widest">SCAN TO VERIFY</p>
-              </div>
-            </div>
-            {/* Footer */}
-            <div className="bg-ink px-4 py-3 mt-2">
-              <p className="text-white text-[11px] text-center font-bold tracking-wide">COMR. ARUNA ABUBAKARI</p>
-              <p className="text-orange text-[9px] text-center font-bold tracking-widest">SENATORIAL CANDIDATE, EDO NORTH</p>
-            </div>
-          </div>
-          <button onClick={() => downloadCard(frontRef, `AA-ID-Front-${volunteer.volunteer_id.replace(/\//g, "-")}`)}
-            className="bg-ink text-white font-bold px-6 py-2.5 rounded-xl hover:bg-orange transition-colors text-sm">
-            Download Front
-          </button>
-        </div>
-
-        {/* ── BACK ── */}
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate">Back</p>
-          <div ref={backRef} className="w-[340px] min-h-[520px] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white font-sans flex flex-col">
-            <div className="bg-ink px-5 py-4">
-              <p className="text-white font-black text-lg leading-tight">
-                <span className="text-orange">AA</span> SENATORIAL CAMPAIGN ORGANIZATION
-              </p>
-              <p className="text-white/70 text-xs font-semibold tracking-widest mt-1">PEOPLE FIRST. <span className="text-orange">PROGRESS ALWAYS.</span></p>
-              <div className="flex gap-1 mt-2">
-                <div className="w-4 h-1.5 bg-orange" /><div className="w-4 h-1.5 bg-orange" /><div className="w-4 h-1.5 bg-orange" />
-              </div>
-            </div>
-            <div className="px-5 py-4 border-b border-gray-100">
-              <p className="text-ink font-black text-sm tracking-wide mb-2">ABOUT US</p>
-              <p className="text-gray-600 text-xs leading-relaxed">
-                We are a people-driven movement committed to electing{" "}
-                <strong>Comr. Aruna Abubakari</strong> as Senator for Edo North.
-              </p>
-            </div>
-            <div className="px-5 py-4 flex-1">
-              <p className="text-ink font-black text-sm tracking-wide mb-3">VOLUNTEER CODE OF CONDUCT</p>
-              <div className="space-y-2">
-                {[
-                  "I will promote peace, unity and respect for all.",
-                  "I will abide by the rules and directives of the campaign.",
-                  "I will not engage in any act that brings the campaign into disrepute.",
-                  "I will work with integrity, loyalty and responsibility.",
-                  "I will uphold the values of transparency and accountability.",
-                ].map((rule, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <div className="w-4 h-4 rounded-full bg-ink flex items-center justify-center shrink-0 mt-0.5">
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-600 text-xs leading-relaxed">{rule}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mx-5 border-t-2 border-orange/40" />
-            <div className="px-5 py-4">
-              <p className="text-gray-500 text-[10px] text-center font-semibold mb-1">PROPERTY OF</p>
-              <p className="text-ink font-black text-xs text-center mb-3">AA SENATORIAL CAMPAIGN ORGANIZATION</p>
-              <p className="text-orange font-black text-[10px] text-center tracking-wide mb-2">IF FOUND, PLEASE RETURN:</p>
-              <div className="space-y-1 text-center">
-                <p className="text-gray-600 text-xs">Aruna Campaign House</p>
-                <p className="text-gray-600 text-xs">14 Sapele Road, Auchi, Edo State</p>
-                <p className="text-gray-600 text-xs">{volunteer.phone}</p>
-              </div>
-            </div>
-            <div className="bg-ink px-5 py-3 flex items-center justify-between mt-auto">
-              <p className="text-white text-[9px] font-bold tracking-widest">NOT TRANSFERABLE</p>
-              <div className="w-1.5 h-1.5 rounded-full bg-orange" />
-              <p className="text-white text-[9px] font-bold tracking-widest">VALID FOR 2027</p>
-            </div>
-          </div>
-          <button onClick={() => downloadCard(backRef, `AA-ID-Back-${volunteer.volunteer_id.replace(/\//g, "-")}`)}
-            className="bg-ink text-white font-bold px-6 py-2.5 rounded-xl hover:bg-orange transition-colors text-sm">
-            Download Back
-          </button>
-        </div>
+    <div className="flex flex-col items-center gap-8 py-8 px-4 w-full">
+      <div className="text-center">
+        <h2 className="font-display text-3xl font-extrabold text-[#01381D] tracking-tight">
+          OFFICIAL <span className="text-[#F97316]">VOLUNTEER ID</span>
+        </h2>
+        <p className="text-slate text-sm mt-1">
+          Your photo is automatically placed in your card. You can also update it anytime below.
+        </p>
       </div>
 
-      <button onClick={async () => {
-        await downloadCard(frontRef, `AA-ID-Front-${volunteer.volunteer_id.replace(/\//g, "-")}`);
-        await downloadCard(backRef, `AA-ID-Back-${volunteer.volunteer_id.replace(/\//g, "-")}`);
-      }} className="bg-orange text-white font-bold px-10 py-3 rounded-xl hover:bg-ink transition-colors uppercase tracking-wider">
-        Download Both Cards
+      {/* Hidden file input triggered by button or clicking photo */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoUpload}
+        className="hidden"
+      />
+
+      {/* Photo upload trigger button */}
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="cursor-pointer inline-flex items-center gap-2 bg-white border-2 border-[#F97316] text-[#01381D] font-bold rounded-xl px-5 py-2.5 hover:bg-[#F97316] hover:text-white transition-all shadow-sm group text-sm"
+      >
+        <Camera className="w-4 h-4 text-[#F97316] group-hover:text-white transition-colors" />
+        <span>{photo ? "Change Card Photo" : "Upload Passport Photo"}</span>
+      </button>
+
+      {/* ── CARDS WRAPPER ── */}
+      <div className="flex flex-col xl:flex-row gap-10 items-center justify-center w-full max-w-5xl">
+        
+        {/* ════════════════ FRONT CARD ════════════════ */}
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#01381D]/70 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full">
+            Front Card
+          </span>
+
+          <div
+            ref={frontRef}
+            className="w-[350px] h-[560px] rounded-[28px] overflow-hidden shadow-2xl border border-gray-200/80 bg-white relative font-sans flex flex-col justify-between select-none"
+            style={{ boxSizing: "border-box" }}
+          >
+            {/* Top SVG Header Swoosh */}
+            <svg
+              className="absolute top-0 left-0 w-full h-[125px] pointer-events-none z-0"
+              viewBox="0 0 350 125"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              {/* Right orange swoosh curve */}
+              <path
+                d="M 170 0 C 235 25 315 50 350 115 L 350 0 Z"
+                fill="#F97316"
+              />
+              {/* Dark forest green curved header */}
+              <path
+                d="M 0 0 L 350 0 L 350 30 C 305 16 235 18 175 32 C 105 48 55 76 0 76 Z"
+                fill="#01381D"
+              />
+            </svg>
+
+            {/* Upper Content: Photo + Headings */}
+            <div className="relative z-10 pt-7 flex flex-col items-center w-full px-5">
+              
+              {/* Orange Rounded Photo Frame */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                title="Click to change photo"
+                className="w-[155px] h-[155px] rounded-[24px] border-[3.5px] border-[#F97316] bg-[#F8FAFC] overflow-hidden relative cursor-pointer group shadow-sm flex items-center justify-center shrink-0"
+              >
+                {photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo}
+                    alt="Volunteer"
+                    className="w-full h-full object-cover rounded-[19px] transition-transform duration-300 group-hover:scale-105"
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center p-3 text-gray-400 group-hover:text-[#F97316] transition-colors">
+                    <Camera className="w-8 h-8 mb-1 opacity-70" />
+                    <span className="text-[11px] font-bold tracking-wide">Upload Photo</span>
+                  </div>
+                )}
+                {/* Subtle hover overlay */}
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-[19px]">
+                  <span className="text-white text-xs font-semibold bg-[#01381D]/80 px-2 py-1 rounded">Change</span>
+                </div>
+              </div>
+
+              {/* Candidate Name & Title */}
+              <div className="text-center mt-3 w-full">
+                <h3 className="text-[#01381D] font-black text-[20px] tracking-tight leading-none uppercase">
+                  ABUBAKARI ARUNA
+                </h3>
+                
+                {/* Orange For Senate with horizontal lines */}
+                <div className="flex items-center justify-center gap-2 mt-1.5">
+                  <div className="h-[2px] w-6 bg-[#F97316]" />
+                  <span className="text-[#F97316] font-black text-[12px] tracking-[0.2em] uppercase leading-none">
+                    FOR SENATE
+                  </span>
+                  <div className="h-[2px] w-6 bg-[#F97316]" />
+                </div>
+
+                <p className="text-[#01381D] font-bold text-[9.5px] tracking-[0.16em] uppercase mt-1 leading-none">
+                  EDO NORTH SENATORIAL DISTRICT
+                </p>
+              </div>
+
+              {/* Big Bold VOLUNTEER with Star */}
+              <div className="text-center mt-3.5 w-full">
+                <h1 className="text-[#01381D] font-black text-[32px] tracking-wider uppercase leading-none">
+                  VOLUNTEER
+                </h1>
+                <div className="text-[#F97316] text-[16px] leading-none mt-1 select-none">
+                  ★
+                </div>
+              </div>
+
+              {/* Form details lines */}
+              <div className="w-full px-4 space-y-2 mt-2.5">
+                <div className="flex items-baseline border-b-[1.5px] border-gray-400/80 pb-0.5">
+                  <span className="font-extrabold text-[#01381D] text-[11px] tracking-wider w-22 shrink-0">
+                    NAME:
+                  </span>
+                  <span className="font-bold text-gray-900 text-[12px] truncate uppercase flex-1">
+                    {fullName}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline border-b-[1.5px] border-gray-400/80 pb-0.5">
+                  <span className="font-extrabold text-[#01381D] text-[11px] tracking-wider w-22 shrink-0">
+                    ID NUMBER:
+                  </span>
+                  <span className="font-bold text-gray-900 text-[12px] tracking-wider truncate uppercase flex-1">
+                    {idNumber}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline border-b-[1.5px] border-gray-400/80 pb-0.5">
+                  <span className="font-extrabold text-[#01381D] text-[11px] tracking-wider w-22 shrink-0">
+                    POSITION:
+                  </span>
+                  <span className="font-bold text-gray-900 text-[12px] truncate uppercase flex-1">
+                    {position}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Swoosh & Website */}
+            <div className="relative w-full h-[62px] mt-auto">
+              {/* Bottom curves SVG */}
+              <svg
+                className="absolute bottom-0 left-0 w-full h-[62px] pointer-events-none z-0"
+                viewBox="0 0 350 62"
+                fill="none"
+                preserveAspectRatio="none"
+              >
+                {/* Orange accent wave */}
+                <path
+                  d="M 0 32 C 80 10 240 40 350 20 L 350 28 C 240 48 80 18 0 40 Z"
+                  fill="#F97316"
+                />
+                {/* Dark green bottom wave */}
+                <path
+                  d="M 0 36 C 90 15 250 44 350 25 L 350 62 L 0 62 Z"
+                  fill="#01381D"
+                />
+              </svg>
+
+              {/* Website Text */}
+              <div className="absolute inset-0 flex items-center justify-center pt-3.5 z-10">
+                <div className="flex items-center gap-1.5 text-white text-[10.5px] font-medium tracking-wide">
+                  <Globe className="w-3.5 h-3.5 text-white/90" />
+                  <span>www.abubakariaruna4senate.com</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <button
+            onClick={() => downloadCard(frontRef, `AA-ID-Front-${idNumber.replace(/\//g, "-")}`)}
+            className="inline-flex items-center gap-2 bg-[#01381D] text-white font-bold px-6 py-2.5 rounded-xl hover:bg-[#F97316] transition-colors text-sm shadow-sm"
+          >
+            <Download className="w-4 h-4" /> Download Front
+          </button>
+        </div>
+
+        {/* ════════════════ BACK CARD ════════════════ */}
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#01381D]/70 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full">
+            Back Card
+          </span>
+
+          <div
+            ref={backRef}
+            className="w-[350px] h-[560px] rounded-[28px] overflow-hidden shadow-2xl border border-gray-200/80 bg-white relative font-sans flex flex-col justify-between select-none"
+            style={{ boxSizing: "border-box" }}
+          >
+            {/* Top Arch Shape SVG */}
+            <svg
+              className="absolute top-0 left-0 w-full h-[185px] pointer-events-none z-0"
+              viewBox="0 0 350 185"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              {/* Dark green top background with center cutout */}
+              <path
+                d="M 0 0 L 350 0 L 350 65 C 270 148 80 148 0 65 Z"
+                fill="#01381D"
+              />
+              {/* Orange arc contour */}
+              <path
+                d="M 0 65 C 80 148 270 148 350 65 L 350 72 C 270 156 80 156 0 72 Z"
+                fill="#F97316"
+              />
+            </svg>
+
+            {/* Circular Seal & Identification badge */}
+            <div className="relative z-10 pt-4 flex flex-col items-center w-full px-5">
+              {/* Official Seal Logo */}
+              <div className="w-[136px] h-[136px] rounded-full overflow-hidden bg-white shadow-md border-2 border-white flex items-center justify-center p-0.5 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo.png"
+                  alt="Candidate Seal"
+                  className="w-full h-full object-contain rounded-full"
+                  crossOrigin="anonymous"
+                />
+              </div>
+
+              {/* VOLUNTEER IDENTIFICATION Pill Badge */}
+              <div className="mt-3">
+                <div className="bg-[#01381D] text-white text-[10.5px] font-extrabold tracking-[0.12em] px-6 py-1.5 rounded-full uppercase shadow-xs">
+                  VOLUNTEER IDENTIFICATION
+                </div>
+              </div>
+
+              {/* Official statement */}
+              <div className="mt-3.5 space-y-2 text-left w-full px-2">
+                <p className="text-gray-800 text-[11.5px] font-medium leading-[1.45]">
+                  This card identifies the bearer as an official volunteer for the Abubakari Aruna For Senate Campaign.
+                </p>
+                <p className="text-gray-800 text-[11.5px] font-medium leading-[1.45]">
+                  The bearer is authorized to perform duties in support of the campaign.
+                </p>
+              </div>
+
+              {/* Signature & QR Code Row */}
+              <div className="w-full px-2 pt-2.5 flex items-end justify-between">
+                {/* Left: Signature Block */}
+                <div className="flex flex-col">
+                  {/* Handwritten Candidate Signature */}
+                  <div className="w-32 h-10 -mb-1">
+                    <svg viewBox="0 0 160 48" className="w-full h-full text-[#01381D]" fill="none" stroke="currentColor">
+                      <path
+                        d="M 12 36 C 20 18 28 6 38 19 C 43 28 40 40 34 41 C 28 42 25 36 29 28 C 36 12 52 20 60 33 C 68 20 75 24 82 34 C 90 22 99 26 104 33 C 111 24 120 28 126 34 C 133 26 142 28 152 32"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M 18 42 Q 80 39 152 40"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="border-t border-[#01381D]/40 pt-1">
+                    <p className="font-extrabold text-[#01381D] text-[12px] leading-tight">
+                      Hon. Abubakari Aruna
+                    </p>
+                    <p className="text-[#F97316] font-bold text-[10px] tracking-wide leading-tight">
+                      Senatorial Candidate
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: QR Code */}
+                <div className="flex flex-col items-center">
+                  <div className="border border-gray-300 p-1.5 rounded-xl bg-white shadow-xs">
+                    <QRCodeSVG
+                      value={verifyUrl}
+                      size={68}
+                      fgColor="#01381D"
+                      bgColor="#ffffff"
+                      level="M"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Contact + Slogan Strip */}
+            <div className="relative z-10 mt-auto flex flex-col w-full">
+              {/* Dark Green Contact Bar */}
+              <div className="bg-[#01381D] text-white px-5 py-2.5 flex items-center justify-between">
+                {/* Contact info list */}
+                <div className="space-y-1 text-[9px] font-medium text-white/95">
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="w-2.5 h-2.5 text-white/90 shrink-0" />
+                    <span>0803 123 4567</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Mail className="w-2.5 h-2.5 text-white/90 shrink-0" />
+                    <span>info@abubakariaruna4senate.com</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Globe className="w-2.5 h-2.5 text-white/90 shrink-0" />
+                    <span>www.abubakariaruna4senate.com</span>
+                  </div>
+                </div>
+
+                {/* Slogan */}
+                <div className="text-right font-black text-[10.5px] leading-tight text-white tracking-wider">
+                  <p>TOGETHER,</p>
+                  <p>WE BUILD</p>
+                  <p>EDO NORTH</p>
+                </div>
+              </div>
+
+              {/* Bottom Orange Tagline Bar */}
+              <div className="bg-[#F97316] py-1.5 text-center">
+                <p className="text-white font-extrabold text-[9.5px] tracking-[0.16em] uppercase">
+                  SERVICE &nbsp;•&nbsp; INTEGRITY &nbsp;•&nbsp; COMMITMENT
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <button
+            onClick={() => downloadCard(backRef, `AA-ID-Back-${idNumber.replace(/\//g, "-")}`)}
+            className="inline-flex items-center gap-2 bg-[#01381D] text-white font-bold px-6 py-2.5 rounded-xl hover:bg-[#F97316] transition-colors text-sm shadow-sm"
+          >
+            <Download className="w-4 h-4" /> Download Back
+          </button>
+        </div>
+
+      </div>
+
+      {/* Download Both Cards button */}
+      <button
+        onClick={async () => {
+          const cleanId = idNumber.replace(/\//g, "-");
+          await downloadCard(frontRef, `AA-ID-Front-${cleanId}`);
+          await downloadCard(backRef, `AA-ID-Back-${cleanId}`);
+        }}
+        className="bg-[#F97316] text-white font-extrabold px-10 py-3.5 rounded-xl hover:bg-[#01381D] transition-all shadow-md uppercase tracking-wider text-sm inline-flex items-center gap-2.5 mt-2"
+      >
+        <Download className="w-5 h-5" />
+        Download Both Cards (Front & Back)
       </button>
     </div>
   );

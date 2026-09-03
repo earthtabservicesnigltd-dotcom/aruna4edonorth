@@ -19,7 +19,7 @@ export function AboutHeroSection() {
             Who Is <em className="text-forest not-italic">Comr. Aruna Abubakari?</em>
           </h1>
           <p className="text-[17px] leading-relaxed text-slate max-w-[480px] mt-4">
-            A teacher&apos;s son from Auchi. An education officer who refused to look away from empty classrooms. A public servant who published the account ledgers. And a candidate who believes the work speaks for itself.
+            An indigene of Jagbe Ward, Etsako West LGA. A community development advocate, real estate developer, and former PHCN leader with over three decades of leadership experience across Edo State.
           </p>
         </div>
         <figure className="rise" style={delay(120)}>

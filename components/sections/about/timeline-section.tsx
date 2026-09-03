@@ -6,67 +6,110 @@ import { delay } from "@/lib/animation";
 
 const education = [
   {
-    year: "2002",
-    title: "University of Benin",
-    role: "B.Sc. Public Administration",
-    desc: "Graduated with a degree in Public Administration, where he first began analysing Nigeria's federal structure and its impact on local communities.",
+    badge: "OND",
+    title: "National Diploma in Banking & Finance",
+    institution: "Federal Polytechnic, Oko",
+    desc: "Obtained a National Diploma in Banking and Finance, building a strong foundation in financial management, administration, and economic principles.",
   },
   {
-    year: "2017",
-    title: "University of Ibadan",
-    role: "M.Sc. Development Studies",
-    desc: "Completed a Master's degree in Development Studies, focused on rural community development and public financial management — often driving three hours after work to make evening lectures.",
+    badge: "ADV. DIP",
+    title: "Advanced Diploma in Accounting",
+    institution: "Obafemi Awolowo University, Ile-Ife",
+    desc: "Further developed his expertise in accounting, financial analysis, and administrative management through advanced professional training.",
+  },
+  {
+    badge: "ANAN",
+    title: "Association of National Accountants of Nigeria (ANAN)",
+    institution: "Nigerian College of Accountancy, Jos — 2009",
+    desc: "Became a member of ANAN after completing professional accounting training, strengthening his competence in financial management, accountability, and leadership.",
   },
 ];
 
 const career = [
   {
-    year: "2006–2011",
-    title: "Education Officer",
-    role: "Etsako Local Government Education Authority",
-    desc: "Audited enrolment figures ward by ward and designed a termly audit system that reduced reporting discrepancies by over 40%.",
+    badge: "PHCN",
+    title: "Power Holding Company of Nigeria (PHCN)",
+    role: "Ughelli Power Generation Station & PHCN Benin Distribution Company",
+    desc: "Began his professional career with the Power Holding Company of Nigeria, serving at Ughelli Power Generation Station, Benin Zonal Office, Sokponba Business District, and later as Business Manager, PHCN Benin Distribution Company. He gained extensive experience in power administration, utility management, project execution, and public service delivery.",
   },
   {
-    year: "2011–2015",
-    title: "Ward Councillor",
-    role: "Etsako Local Government",
-    desc: "Won election as councillor and introduced quarterly public expenditure reports — among the first of their kind at that level of government.",
+    badge: "NUEE",
+    title: "National Union of Electricity Employees (NUEE)",
+    role: "Labour Leadership (Edo State Secretary)",
+    desc: "Served in various leadership positions within the National Union of Electricity Employees, including Chapter Treasurer, Chapter Vice Chairman, Chapter Chairman, and Edo State Secretary. His leadership focused on workers' welfare, transparency, and effective representation.",
   },
   {
-    year: "2015–2021",
-    title: "Special Adviser, Rural Infrastructure",
-    role: "Edo State Government",
-    desc: "Moved contractors from advance-payment to milestone-based payments, raising project completion rates from 38% to 81%. Oversaw rehabilitation of 200+ km of feeder roads.",
+    badge: "MD/CEO",
+    title: "City of Goshen Housing Development Company Limited",
+    role: "Managing Director & Chief Executive Officer",
+    desc: "Served as Managing Director and Chief Executive Officer, providing leadership in housing and property development initiatives while contributing to the growth of real estate development projects.",
   },
   {
-    year: "2021–Present",
-    title: "Chairman",
-    role: "Edo North Community Development Coalition",
-    desc: "Leads a citizen-led group that independently monitors constituency projects and publishes the biannual Constituency Project Report Card.",
+    badge: "REDAN",
+    title: "Real Estate Developers Association of Nigeria (REDAN)",
+    role: "Edo State Chairman",
+    desc: "His contributions to the real estate sector earned him election as Edo State Chairman of REDAN, where he supported the advancement and development of the real estate industry in Edo State.",
+  },
+  {
+    badge: "Director",
+    title: "Touch Engineering Properties and Construction",
+    role: "Executive Director",
+    desc: "Provides strategic leadership in engineering, construction, real estate, and infrastructure development, overseeing projects that contribute to community growth and economic transformation.",
+  },
+  {
+    badge: "Dev",
+    title: "Community Development & Infrastructure",
+    role: "Edo State Communities",
+    desc: "Has contributed to community development through projects and initiatives involving electrification schemes, housing development, water supply projects, borehole installations, road infrastructure, agriculture, and grassroots empowerment.",
   },
 ];
 
-function TimelineColumn({ title, items }: { title: string; items: typeof education }) {
+interface TimelineProps {
+  category: string;
+  title: string;
+  items: Array<{
+    badge: string;
+    title: string;
+    institution?: string;
+    role?: string;
+    desc: string;
+  }>;
+}
+
+function TimelineColumn({ category, title, items }: TimelineProps) {
   return (
     <div>
-      <h3 className="font-display font-semibold text-xl text-ink mb-6 border-b border-ink/10 pb-3">
-        {title}
-      </h3>
-      <div className="space-y-0">
+      <div className="border-b border-ink/10 pb-4 mb-6">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-orange block mb-1">
+          {category}
+        </span>
+        <h3 className="font-display font-semibold text-2xl text-ink">
+          {title}
+        </h3>
+      </div>
+
+      <div className="space-y-6">
         {items.map((item, i) => (
           <div
             key={item.title}
-            className="grid grid-cols-[50px_1fr] md:grid-cols-[90px_1fr] gap-4 md:gap-8 py-8 border-b border-ink/10 last:border-0"
+            className="bg-white border border-ink/10 p-6 sm:p-7 rounded-site hover:border-orange hover:shadow-md transition-all relative overflow-hidden"
           >
-            <div className="text-center">
-              <span className="w-4 h-4 rounded-full bg-orange inline-block border-2 border-white shadow-[0_0_0_1.5px_#F97316] relative z-10" />
-              <span className="block font-mono text-xs text-ink font-semibold mt-2.5">{item.year}</span>
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <span className="inline-block bg-orange/10 text-orange font-mono font-bold text-[11px] uppercase tracking-wider px-3 py-1 rounded-full border border-orange/20">
+                {item.badge}
+              </span>
+              <span className="font-mono text-[11px] text-slate font-medium">
+                {item.institution || item.role}
+              </span>
             </div>
-            <div className="bg-white border border-ink/10 p-7 rounded-site hover:border-emerald hover:shadow-md transition-all">
-              <h4 className="font-display font-semibold text-lg text-ink mb-1.5">{item.title}</h4>
-              <span className="block font-mono text-[11.5px] text-orange tracking-wide mb-3">{item.role}</span>
-              <p className="text-[14.5px] leading-relaxed text-slate">{item.desc}</p>
-            </div>
+
+            <h4 className="font-display font-semibold text-lg text-ink mb-2">
+              {item.title}
+            </h4>
+
+            <p className="text-[14.5px] leading-relaxed text-slate">
+              {item.desc}
+            </p>
           </div>
         ))}
       </div>
@@ -79,13 +122,21 @@ export function TimelineSection() {
     <section className="py-20 bg-paper">
       <div className="max-w-site mx-auto px-8">
         <SectionHead
-          number="HISTORY"
-          title={<>Education &amp; <span className="accent">Career</span></>}
+          number="RECORD"
+          title={<>Academic Background &amp; <span className="accent">Career History</span></>}
         />
 
-        <div className="grid lg:grid-cols-2 gap-16">
-          <TimelineColumn title="Education" items={education} />
-          <TimelineColumn title="Career History" items={career} />
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <TimelineColumn
+            category="Academic Background"
+            title="Education"
+            items={education}
+          />
+          <TimelineColumn
+            category="Track Record"
+            title="Career History"
+            items={career}
+          />
         </div>
       </div>
     </section>

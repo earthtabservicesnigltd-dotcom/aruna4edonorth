@@ -5,12 +5,12 @@ import { SectionHead } from "../section-head";
 import { delay } from "@/lib/animation";
 
 const leadership = [
-  { n: "01", title: "Edo North Community Development Coalition", text: "Chaired the coalition that independently monitors constituency projects and publishes biannual report cards across all seven LGAs." },
-  { n: "02", title: "Rural Infrastructure Reform", text: "Designed and implemented the milestone-based payment system for feeder road projects, increasing completion rates from 38% to 81%." },
-  { n: "03", title: "Education Accountability System", text: "Created the ward-level enrolment audit system adopted by multiple LGAs, reducing reporting discrepancies by over 40%." },
-  { n: "04", title: "Councillor Transparency Initiative", text: "Pioneered quarterly public expenditure reports at the local government level, a practice almost unheard of at the time." },
-  { n: "05", title: "Constituency Project Report Card", text: "Launched a biannual citizen-led evaluation of government projects, rating quality, timeliness, and value-for-money." },
-  { n: "06", title: "Interfaith & Community Engagement", text: "Built a reputation for even-handed community engagement across Edo North's religiously diverse population." },
+  { n: "01", title: "Power Administration & Grid Management", text: "Extensive leadership across Ughelli Power Generation, Sokponba, and as Business Manager of PHCN Benin Distribution Company." },
+  { n: "02", title: "Labour Representation & Workers' Welfare", text: "Served as Edo State Secretary of NUEE, championing transparency, fair conditions, and responsible union leadership." },
+  { n: "03", title: "Real Estate & Housing Development", text: "Led the Real Estate Developers Association of Nigeria (REDAN) in Edo State and served as MD/CEO of City of Goshen Housing Development Co." },
+  { n: "04", title: "Infrastructure & Engineering Projects", text: "Executive Director at Touch Engineering Properties and Construction, directing key residential and infrastructure development." },
+  { n: "05", title: "Financial Expertise & Professional Integrity", text: "Member of the Association of National Accountants of Nigeria (ANAN), integrating sound financial accountability with public service." },
+  { n: "06", title: "Grassroots Development & Public Service", text: "Three decades of community advocacy, agricultural development, and empowerment initiatives across Jagbe Ward and Edo North." },
 ];
 
 export function LeadershipSection() {
